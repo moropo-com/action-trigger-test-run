@@ -3,18 +3,24 @@ description: "A Github Action that triggers a test on CI-CD"
 inputs:
   build_id:
     description: "Build ID"
-    required: true
+    required: false
   expo_release_channel:
     description: "Expo Release Channel"
     required: false
   devices:
     description: "Devices"
-    required: true
+    required: false
   test_id:
     description: "Test ID"
-    required: true
+    required: false
   api:
     description: "API Key"
+    required: true
+  moropo_api_key:
+    description: "Moropo API Key"
+    required: false
+  test_run_id:
+    description: "Test Run ID"
     required: true
 runs:
   using: "docker"

@@ -7,37 +7,57 @@ async function run() {
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const devices = core.getInput('devices');
     const testId = core.getInput('test_id');
-    const api = core.getInput('api');
+    const testRunId = core.getInput('test_run_id');
+    const moropoApiKey = core.getInput('moropo_api_key');
 
-    // Moropo CURL endpoint
-    //`?buildId=${buildId}&devices=${devices}&testId=${testId}&api=${api}`
-    let url = "";
+    const body = {
+        testRunId: testRunId
+    };
 
-    if (expoReleaseChannel) {
-      url += `&expoReleaseChannel=${expoReleaseChannel}`;
+    if(buildId) {
+        body.buildId = buildId;
     }
 
-    const response = await fetch(url, {
+    if(expoReleaseChannel) {
+        body.expoReleaseChannel = expoReleaseChannel;
+    }
+
+    if(devices) {
+        body.deviceIds = devices.split(',').map(Number);
+    }
+
+    if(testId) {
+        body.testIds = testId.split(',').map(Number);
+    }
+
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+
+    if(moropoApiKey) {
+        headers['x-moropo-api-key'] = moropoApiKey;
+    }
+
+    const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      body: JSON.stringify(body),
+      headers: headers
     });
 
     const data = await response.json();
-
+    
     // Use data to send to Slack
-    // You can use Incoming Webhook URL of Slack here to send message to your Slack channel
     const slackUrl = process.env.SLACK_WEBHOOK_URL;
     const slackMessage = {
-      text: `Action has been completed with status: ${data.status}`,
-    };
+      text: `Action has been completed with status: ${data.status}`
+    }
 
     fetch(slackUrl, {
       method: 'POST',
       body: JSON.stringify(slackMessage),
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type': 'application/json'}
     });
+    
   } catch (error) {
     core.setFailed(error.message);
   }
