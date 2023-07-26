@@ -45,19 +45,31 @@ async function run() {
     });
 
     const data = await response.json();
-    
-    // Use data to send to Slack
-    const slackUrl = process.env.SLACK_WEBHOOK_URL;
-    const slackMessage = {
-      text: `Action has been completed with status: ${data.status}`
-    }
 
-    fetch(slackUrl, {
-      method: 'POST',
-      body: JSON.stringify(slackMessage),
-      headers: {'Content-Type': 'application/json'}
-    });
-    
+    // Monitor the status of the test
+    let checkStatusResponse;
+    let checkStatusData;
+    let testComplete;
+
+    do {
+      checkStatusResponse = await fetch(`https://dev.moropo.com/.netlify/functions/getTestRunStatus?testRunId=${testRunId}`, {
+        method: 'GET',
+        headers: headers
+      });
+
+      checkStatusData = await checkStatusResponse.json();
+      testComplete = !(checkStatusData.status === 'PENDING' || checkStatusData.status === 'RUNNING');
+
+      // Pause for a period of time before checking the status again
+      if (!testComplete) {
+        await new Promise(r => setTimeout(r, 15000));
+      }
+    } while (!testComplete);
+
+    // Exit the action with code 0 or 1 depending on the final status
+    if (checkStatusData.status === 'FAILED') {
+      core.setFailed('The test run has failed.');
+    }
   } catch (error) {
     core.setFailed(error.message);
   }
