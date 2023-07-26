@@ -82,6 +82,7 @@ async function run() {
     });
 
     const data = await response.json();
+    const newTestRunId = data.newTestRunId;
 
     // Monitor the status of the test
     let checkStatusResponse;
@@ -89,13 +90,14 @@ async function run() {
     let testComplete;
 
     do {
-      checkStatusResponse = await fetch(`https://dev.moropo.com/.netlify/functions/getTestRunStatus?testRunId=${testRunId}`, {
-        method: 'GET',
-        headers: headers
+      checkStatusResponse = await fetch(`https://dev.moropo.com/.netlify/functions/getTestRunStatus`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({testRunId: newTestRunId})
       });
 
       checkStatusData = await checkStatusResponse.json();
-      testComplete = !(checkStatusData.status === 'PENDING' || checkStatusData.status === 'RUNNING');
+      testComplete = !(checkStatusData.testStatus?.status === 'PENDING' || checkStatusData.testStatus?.status === 'RUNNING');
 
       // Pause for a period of time before checking the status again
       if (!testComplete) {
@@ -104,7 +106,7 @@ async function run() {
     } while (!testComplete);
 
     // Update the comment depending on the test status
-    const message = `The test run has ${checkStatusData.status.toLowerCase()} with test run ID: ${testRunId}`;
+    const message = `The test run has ${checkStatusData.testStatus?.status?.toLowerCase()} with test run ID: ${testRunId}`;
 
     if (context.payload.pull_request) {
       // It's a pull request
