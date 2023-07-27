@@ -2,6 +2,7 @@ const core = require('@actions/core');
 const fetch = require('node-fetch');
 const { Octokit } = require("@octokit/rest");
 const github = require('@actions/github');
+const fs = require('fs');
 
 async function run() {
   try {
