@@ -3,10 +3,12 @@ const fetch = require('node-fetch');
 const { Octokit } = require("@octokit/rest");
 const github = require('@actions/github');
 const fs = require('fs');
+const path = require('path');
 
 async function run() {
   try {
-    const template = fs.readFileSync('./message.md', 'utf8');
+    const messageFilePath = path.join(__dirname, 'message.md');
+    const template = fs.readFileSync(messageFilePath, 'utf8');
     const buildId = core.getInput('build_id');
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const devices = core.getInput('devices');
@@ -51,14 +53,15 @@ async function run() {
     const context = github.context;
     let comment_id;
 
-    const initialCommentBody = template
-    .replace('{buildId}', buildId)
-    .replace('{expoReleaseChannel}', expoReleaseChannel)
-    .replace('{devices}', devices.join('<br>'))
-    .replace('{testId}', testId.join('<br>'))
+    let initialCommentBody = template;
+    initialCommentBody = initialCommentBody
+    .replace('{buildId}', " - ")
+    .replace('{expoReleaseChannel}', " - ")
+    .replace('{devices}', " - ")
+    .replace('{testId}', " - ")
     .replace('{statusIcon}', '⌛️')
     .replace('{status}', 'Pending')
-    .replace('{pendingCount}', testId.split(',').length);
+    .replace('{pendingCount}', " - ");
 
     if (context.payload.pull_request) {
       // It's a pull request
@@ -92,7 +95,37 @@ async function run() {
       headers: headers
     });
 
-    const data = await response.json();
+    const { data } = await response.json();
+
+    let updatedCommentBody = template;
+    updatedCommentBody = updatedCommentBody
+    .replace('{buildId}', data?.build)
+    .replace('{expoReleaseChannel}', data?.expoReleaseChannel ?? "")
+    .replace('{devices}', data?.devices?.join('<br>'))
+    .replace('{testId}', data?.tests?.join('<br>'))
+    .replace('{statusIcon}', '⌛️')
+    .replace('{status}', 'Pending')
+    .replace('{pendingCount}', testId.split(',').length);
+
+    if (context.payload.pull_request) {
+      // It's a pull request
+      const pull_request_number = context.payload.pull_request.number;
+
+      await octokit.issues.updateComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        comment_id: comment_id,
+        body: updatedCommentBody,
+      });
+    } else {
+      // It's a commit
+      await octokit.repos.updateCommitComment({
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        comment_id: comment_id,
+        body: updatedCommentBody,
+      });
+    }
 
   } catch (error) {
     core.setFailed(error.message);
