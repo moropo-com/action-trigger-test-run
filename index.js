@@ -89,6 +89,12 @@ async function run() {
       comment_id = initialComment.data.id;
     }
 
+    body.githubInfo = {
+      comment_id,
+      owner: context.repo.owner,
+      repo: context.repo.repo
+    }
+
     const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
       method: 'POST',
       body: JSON.stringify(body),
