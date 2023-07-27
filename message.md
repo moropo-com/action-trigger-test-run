@@ -15,9 +15,9 @@
 
 {statusIcon} {status}
 
-**Passed:** 0
-**Failed:** 0
-**Running:** 0
+**Passed:** {passedCount}
+**Failed:** {failedCount}
+**Running:** {runningCount}
 **Pending:** {pendingCount}
 
 [View Results]({url})

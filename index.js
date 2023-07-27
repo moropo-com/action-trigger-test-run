@@ -61,6 +61,9 @@ async function run() {
     .replace('{testId}', " - ")
     .replace('{statusIcon}', '⌛️')
     .replace('{status}', 'Pending')
+    .replace('{passedCount}', '0')
+    .replace('{failedCount}', '0')
+    .replace('{runningCount}', '0')
     .replace('{pendingCount}', " - ");
 
     if (context.payload.pull_request) {
@@ -111,6 +114,9 @@ async function run() {
     .replace('{testId}', data?.tests?.join('<br>'))
     .replace('{statusIcon}', '⌛️')
     .replace('{status}', 'Pending')
+    .replace('{passedCount}', '0')
+    .replace('{failedCount}', '0')
+    .replace('{runningCount}', '0')
     .replace('{pendingCount}', testId.split(',').length);
 
     if (context.payload.pull_request) {
