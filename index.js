@@ -93,7 +93,8 @@ async function run() {
       comment_id,
       owner: context.repo.owner,
       repo: context.repo.repo,
-      is_pr: Boolean(context.payload.pull_request)
+      is_pr: Boolean(context.payload.pull_request),
+      github_token: process.env.GITHUB_TOKEN
     }
 
     const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
