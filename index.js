@@ -45,12 +45,10 @@ async function run() {
         headers['x-moropo-api-key'] = moropoApiKey;
     }
 
-    // Initialize octokit
     const octokit = new Octokit({
       auth: process.env.GITHUB_TOKEN,
     });
 
-    // Get the context of the workflow run
     const context = github.context;
     let comment_id;
 
@@ -68,19 +66,17 @@ async function run() {
     .replace('{pendingCount}', " - ");
 
     if (context.payload.pull_request) {
-      // It's a pull request
       const pull_request_number = context.payload.pull_request.number;
 
       const initialComment = await octokit.issues.createComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
-        issue_number: pull_request_number, // in the case of PRs, the issue number is the PR number
+        issue_number: pull_request_number,
         body: initialCommentBody,
       });
 
       comment_id = initialComment.data.id;
     } else {
-      // It's a commit
       const sha = context.sha;
 
       const initialComment = await octokit.repos.createCommitComment({
@@ -97,7 +93,7 @@ async function run() {
       comment_id,
       owner: context.repo.owner,
       repo: context.repo.repo,
-      pr: Boolean(context.payload.pull_request)
+      is_pr: Boolean(context.payload.pull_request)
     }
 
     const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
@@ -122,9 +118,6 @@ async function run() {
     .replace('{pendingCount}', testId.split(',').length);
 
     if (context.payload.pull_request) {
-      // It's a pull request
-      const pull_request_number = context.payload.pull_request.number;
-
       await octokit.issues.updateComment({
         owner: context.repo.owner,
         repo: context.repo.repo,
@@ -132,7 +125,6 @@ async function run() {
         body: updatedCommentBody,
       });
     } else {
-      // It's a commit
       await octokit.repos.updateCommitComment({
         owner: context.repo.owner,
         repo: context.repo.repo,

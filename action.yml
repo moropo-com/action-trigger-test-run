@@ -14,7 +14,7 @@ inputs:
     description: "Array of test IDs"
     required: false
   scheduled_test_id:
-    description: "Test Run ID"
+    description: "Scheduled Test Run ID"
     required: true
   moropo_api_key:
     description: "Moropo API Key"
