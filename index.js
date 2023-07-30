@@ -12,9 +12,10 @@ async function run() {
     const buildId = core.getInput('build_id');
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const devices = core.getInput('devices');
-    const testId = core.getInput('test_id');
-    const testRunId = core.getInput('test_run_id');
+    const testId = core.getInput('test_ids');
+    const testRunId = core.getInput('scheduled_test_id');
     const moropoApiKey = core.getInput('moropo_api_key');
+    const customBuild = core.getInput('build_input');
 
     const body = {
         testRunId: testRunId
@@ -95,7 +96,8 @@ async function run() {
     body.githubInfo = {
       comment_id,
       owner: context.repo.owner,
-      repo: context.repo.repo
+      repo: context.repo.repo,
+      pr: Boolean(context.payload.pull_request)
     }
 
     const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {

@@ -10,10 +10,10 @@ inputs:
   devices:
     description: "Array of device IDs"
     required: false
-  test_id:
+  test_ids:
     description: "Array of test IDs"
     required: false
-  test_run_id:
+  scheduled_test_id:
     description: "Test Run ID"
     required: true
   moropo_api_key:
