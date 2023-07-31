@@ -1,24 +1,15 @@
 name: "Moropo - Trigger Mobile App Test Run"
 description: "Uses Moropo.com to execute a mobile app UI test"
 inputs:
-  build_id:
-    description: "Moropo Build ID"
-    required: false
-  expo_release_channel:
-    description: "Expo Release Channel"
-    required: false
-  devices:
-    description: "Array of device IDs"
-    required: false
-  test_ids:
-    description: "Array of test IDs"
-    required: false
   scheduled_test_id:
-    description: "Scheduled Test Run ID"
+    description: "Moropo Scheduled Test ID - find this in your scheduled test setup wizard"
     required: true
-  moropo_api_key:
-    description: "Moropo API Key"
+  app_secret:
+    description: "Moropo App Secret Key - find this in your app in the Moropo dashboard"
     required: true
+  expo_release_channel:
+    description: "Expo Release Channel (optional) - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run."
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
