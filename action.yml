@@ -1,8 +1,8 @@
-name: "Moropo Test Run"
-description: "Run tests on Moropo platform"
+name: "Moropo - Trigger Mobile App Test Run"
+description: "Uses Moropo.com to execute a mobile app UI test"
 inputs:
   build_id:
-    description: "Build ID"
+    description: "Moropo Build ID"
     required: false
   expo_release_channel:
     description: "Expo Release Channel"
