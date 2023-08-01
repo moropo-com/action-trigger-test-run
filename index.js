@@ -5,6 +5,46 @@ const github = require('@actions/github');
 const fs = require('fs');
 const path = require('path');
 
+const buildMessageString = ({
+  buildId,
+  devices,
+  tests,
+  expoReleaseChannel,
+  statusIcon,
+  status,
+  passedCount,
+  failedCount,
+  runningCount,
+  pendingCount,
+  url,
+}) => `
+## Moropo Test Run
+
+### Summary
+
+**Build:** ${buildId}
+
+**Release Channel:** ${expoReleaseChannel}
+
+| **Device(s):**       | **Test(s):**        |
+| -------------------- | ------------------- |
+| ${devices} | ${tests} |
+
+---
+
+**Results**
+
+${statusIcon} ${status}
+
+**Passed:** ${passedCount}
+
+**Failed:** ${failedCount}
+
+**Running:** ${
+  runningCount + pendingCount
+} <div style="text-align: right">[View Results](${url})</div>
+`;
+
 const uploadBuild = async (headers, customBuild) => {
   const isBlob = fs.existsSync(path.resolve(__dirname, customBuild));
   const requestBody = isBlob
@@ -24,8 +64,6 @@ const uploadBuild = async (headers, customBuild) => {
 
 const run = async () => {
   try {
-    const messageFilePath = path.join(__dirname, 'message.md');
-    const template = fs.readFileSync(messageFilePath, 'utf8');
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const testRunId = core.getInput('scheduled_test_id');
     const moropoApiKey = core.getInput('app_secret');
@@ -51,18 +89,18 @@ const run = async () => {
     const context = github.context;
     let comment_id;
 
-    let initialCommentBody = template;
-    initialCommentBody = initialCommentBody
-    .replace('{buildId}', "-")
-    .replace('{expoReleaseChannel}', "-")
-    .replace('{devices}', "-")
-    .replace('{testId}', "-")
-    .replace('{statusIcon}', '⌛️')
-    .replace('{status}', 'PENDING')
-    .replace('{passedCount}', '0')
-    .replace('{failedCount}', '0')
-    .replace('{runningCount}', '0')
-    .replace('{pendingCount}', "-");
+    let commentText = buildMessageString({
+      buildId: '-',
+      devices: '-',
+      tests: '-',
+      statusIcon: '⌛️',
+      status: 'PENDING',
+      passedCount: 0,
+      failedCount: 0,
+      runningCount: 0,
+      pendingCount: 0,
+      expoReleaseChannel: '-'
+    });
 
     if (context.payload.pull_request) {
       const pull_request_number = context.payload.pull_request.number;
@@ -71,7 +109,7 @@ const run = async () => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         issue_number: pull_request_number,
-        body: initialCommentBody,
+        body: commentText,
       });
 
       comment_id = initialComment.data.id;
@@ -82,11 +120,26 @@ const run = async () => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         commit_sha: sha,
-        body: initialCommentBody,
+        body: commentText,
       });
 
       comment_id = initialComment.data.id;
     }
+
+    const checkRunResponse = await octokit.request('POST /repos/{owner}/{repo}/check-runs', {
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      name: 'Moropo Check Run',
+      head_sha: context.sha,
+      status: 'in_progress',
+      output: {
+        title: 'Moropo Check Run',
+        summary: 'The check run is in progress',
+        text: 'We are scheduling your test',
+      },
+    });
+    
+    const checkRunId = checkRunResponse.data.id;
 
     const body = {
       testRunId,
@@ -97,7 +150,8 @@ const run = async () => {
         owner: context.repo.owner,
         repo: context.repo.repo,
         is_pr: Boolean(context.payload.pull_request),
-        github_token: process.env.GITHUB_TOKEN
+        github_token: process.env.GITHUB_TOKEN,
+        check_run_id: checkRunId,
       }
     };
 
