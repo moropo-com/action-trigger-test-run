@@ -5,44 +5,42 @@ const github = require('@actions/github');
 const fs = require('fs');
 const path = require('path');
 
-async function run() {
+const uploadBuild = async (headers, customBuild) => {
+  const isBlob = fs.existsSync(path.resolve(__dirname, customBuild));
+  const requestBody = isBlob
+    ? { blob: fs.readFileSync(path.resolve(__dirname, customBuild)).toString() }
+    : { url: customBuild };
+
+  const uploadResponse = await fetch('http://localhost/uploadBuild', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+    headers: headers
+  });
+
+  const uploadData = await uploadResponse.json();
+  return uploadData.build_id;
+};
+
+const run = async () => {
   try {
     const messageFilePath = path.join(__dirname, 'message.md');
     const template = fs.readFileSync(messageFilePath, 'utf8');
-    const buildId = core.getInput('build_id');
     const expoReleaseChannel = core.getInput('expo_release_channel');
-    const devices = core.getInput('devices');
-    const testId = core.getInput('test_ids');
     const testRunId = core.getInput('scheduled_test_id');
-    const moropoApiKey = core.getInput('moropo_api_key');
+    const moropoApiKey = core.getInput('app_secret');
     const customBuild = core.getInput('build_input');
-
-    const body = {
-        testRunId: testRunId
-    };
-
-    if(buildId) {
-        body.buildId = buildId;
-    }
-
-    if(expoReleaseChannel) {
-        body.expoReleaseChannel = expoReleaseChannel;
-    }
-
-    if(devices) {
-        body.deviceIds = devices.split(',').map(Number);
-    }
-
-    if(testId) {
-        body.testIds = testId.split(',').map(Number);
-    }
+    let customBuildId;
 
     const headers = {
-        'Content-Type': 'application/json'
+      'Content-Type': 'application/json'
     };
 
     if(moropoApiKey) {
-        headers['x-moropo-api-key'] = moropoApiKey;
+      headers['x-moropo-api-key'] = moropoApiKey;
+    }
+
+    if (customBuild) {
+      //customBuildId = await uploadBuild(headers, customBuild);
     }
 
     const octokit = new Octokit({
@@ -54,16 +52,16 @@ async function run() {
 
     let initialCommentBody = template;
     initialCommentBody = initialCommentBody
-    .replace('{buildId}', " - ")
-    .replace('{expoReleaseChannel}', " - ")
-    .replace('{devices}', " - ")
-    .replace('{testId}', " - ")
+    .replace('{buildId}', "-")
+    .replace('{expoReleaseChannel}', "-")
+    .replace('{devices}', "-")
+    .replace('{testId}', "-")
     .replace('{statusIcon}', '⌛️')
-    .replace('{status}', 'Pending')
+    .replace('{status}', 'PENDING')
     .replace('{passedCount}', '0')
     .replace('{failedCount}', '0')
     .replace('{runningCount}', '0')
-    .replace('{pendingCount}', " - ");
+    .replace('{pendingCount}', "-");
 
     if (context.payload.pull_request) {
       const pull_request_number = context.payload.pull_request.number;
@@ -89,54 +87,31 @@ async function run() {
       comment_id = initialComment.data.id;
     }
 
-    body.githubInfo = {
-      comment_id,
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      is_pr: Boolean(context.payload.pull_request),
-      github_token: process.env.GITHUB_TOKEN
-    }
+    const body = {
+      testRunId,
+      buildId: customBuildId || undefined,
+      expoReleaseChannel,
+      githubInfo: {
+        comment_id,
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+        is_pr: Boolean(context.payload.pull_request),
+        github_token: process.env.GITHUB_TOKEN
+      }
+    };
 
     const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: headers
     });
-
-    const { data } = await response.json();
-
-    let updatedCommentBody = template;
-    updatedCommentBody = updatedCommentBody
-    .replace('{buildId}', data?.build)
-    .replace('{expoReleaseChannel}', data?.expoReleaseChannel ?? "")
-    .replace('{devices}', data?.devices?.join('<br>'))
-    .replace('{testId}', data?.tests?.join('<br>'))
-    .replace('{statusIcon}', '⌛️')
-    .replace('{status}', 'Pending')
-    .replace('{passedCount}', '0')
-    .replace('{failedCount}', '0')
-    .replace('{runningCount}', '0')
-    .replace('{pendingCount}', testId.split(',').length);
-
-    if (context.payload.pull_request) {
-      await octokit.issues.updateComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        comment_id: comment_id,
-        body: updatedCommentBody,
-      });
-    } else {
-      await octokit.repos.updateCommitComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        comment_id: comment_id,
-        body: updatedCommentBody,
-      });
+    
+    if(!response.ok){
+      core.setFailed(`Failed to schedule a test: ${response.statusText}`)
     }
-
   } catch (error) {
     core.setFailed(error.message);
   }
-}
+};
 
 run();

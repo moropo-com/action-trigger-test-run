@@ -4,20 +4,22 @@
 
 |                      |                     |
 | -------------------- | ------------------- |
-| **Trigger:** CI-CD   | **Build:** {buildId} |
+| **Trigger:**<br>CI-CD   | **Build:**<br>{buildId} |
 | **Release Channel:** | {expoReleaseChannel} |
 | **Device(s):**       | **Test(s):**        |
 | {devices} | {testId} |
 
 ---
 
-**Result**
+**Results**
 
 {statusIcon} {status}
 
-**Passed:** {passedCount}
-**Failed:** {failedCount}
-**Running:** {runningCount}
-**Pending:** {pendingCount}
+|                      |                     |
+| -------------------- | ------------------- |
+| **Passed:** | {passedCount} |
+| **Failed:** | {failedCount} |
+| **Running:** | {runningCount} |
+| **Pending:** | {pendingCount} |
 
 [View Results]({url})
