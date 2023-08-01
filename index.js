@@ -11,6 +11,7 @@ const uploadBuild = async (headers, customBuild) => {
     ? { blob: fs.readFileSync(path.resolve(__dirname, customBuild)).toString() }
     : { url: customBuild };
 
+    // to replace with uploadBuild endpoint
   const uploadResponse = await fetch('http://localhost/uploadBuild', {
     method: 'POST',
     body: JSON.stringify(requestBody),
