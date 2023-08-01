@@ -2,4 +2,9 @@
 
 set -e
 
-node /github/workspace/index.js
+cd $GITHUB_WORKSPACE/
+
+npm install
+
+node index.js
+
