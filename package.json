@@ -1,7 +1,7 @@
 {
   "name": "moropo-github-action",
   "version": "1.0.0",
-  "description": "A Github Action that triggers a test on CI-CD",
+  "description": "Moropo - Trigger Mobile App Test Run",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
