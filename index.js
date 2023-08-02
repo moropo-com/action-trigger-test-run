@@ -107,13 +107,6 @@ const run = async () => {
       testRunId,
       buildId: customBuildId || undefined,
       expoReleaseChannel,
-      githubInfo: {
-        comment_id,
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        is_pr: Boolean(context.payload.pull_request),
-        github_token: process.env.GITHUB_TOKEN,
-      }
     };
 
     const triggerTestRun = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
@@ -136,7 +129,13 @@ const run = async () => {
       },
       body: JSON.stringify({
         testRunId: newTestRunId,
-        githubInfo: body.githubInfo,
+        githubInfo: {
+          comment_id,
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          is_pr: Boolean(context.payload.pull_request),
+          github_token: process.env.GITHUB_TOKEN,
+        },
       })
     });
     
