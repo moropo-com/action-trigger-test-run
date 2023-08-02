@@ -24,7 +24,7 @@ const buildMessageString = ({
 | -------------------- | ------------------- |
 | ${devices} | ${tests} |
 
-<div style="text-align: right">[View Results](${url})</div>
+[View Results](${url})
 `;
 
 const uploadBuild = async (headers, customBuild) => {
@@ -75,7 +75,8 @@ const run = async () => {
       buildId: '-',
       devices: '-',
       tests: '-',
-      expoReleaseChannel: '-'
+      expoReleaseChannel: '-',
+      url: '#'
     });
 
     if (context.payload.pull_request) {
@@ -125,13 +126,13 @@ const run = async () => {
       core.setFailed(`Failed to schedule a test: ${triggerTestRun.statusText}`)
     }
 
-    const { data: testRunData } = await triggerTestRun.json();
-    const { testRunId: newTestRunId } = testRunData;
+    const testRunResponse = await triggerTestRun.json();
+    const newTestRunId = testRunResponse.newTestRunId;
 
     const statusCheck = await fetch('https://dev.moropo.com/.netlify/functions/updateCIComment', {
       method: 'POST',
       headers: {
-        'x-github-token': token,
+        'x-github-token': process.env.GITHUB_TOKEN,
       },
       body: JSON.stringify({
         testRunId: newTestRunId,
