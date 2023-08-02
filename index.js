@@ -10,12 +10,6 @@ const buildMessageString = ({
   devices,
   tests,
   expoReleaseChannel,
-  statusIcon,
-  status,
-  passedCount,
-  failedCount,
-  runningCount,
-  pendingCount,
   url,
 }) => `
 ## Moropo Test Run
@@ -30,19 +24,7 @@ const buildMessageString = ({
 | -------------------- | ------------------- |
 | ${devices} | ${tests} |
 
----
-
-**Results**
-
-${statusIcon} ${status}
-
-**Passed:** ${passedCount}
-
-**Failed:** ${failedCount}
-
-**Running:** ${
-  runningCount + pendingCount
-} <div style="text-align: right">[View Results](${url})</div>
+<div style="text-align: right">[View Results](${url})</div>
 `;
 
 const uploadBuild = async (headers, customBuild) => {
@@ -93,12 +75,6 @@ const run = async () => {
       buildId: '-',
       devices: '-',
       tests: '-',
-      statusIcon: '⌛️',
-      status: 'PENDING',
-      passedCount: 0,
-      failedCount: 0,
-      runningCount: 0,
-      pendingCount: 0,
       expoReleaseChannel: '-'
     });
 
@@ -126,21 +102,6 @@ const run = async () => {
       comment_id = initialComment.data.id;
     }
 
-    const checkRunResponse = await octokit.request('POST /repos/{owner}/{repo}/check-runs', {
-      owner: context.repo.owner,
-      repo: context.repo.repo,
-      name: 'Moropo Check Run',
-      head_sha: context.sha,
-      status: 'in_progress',
-      output: {
-        title: 'Moropo Check Run',
-        summary: 'The check run is in progress',
-        text: 'We are scheduling your test',
-      },
-    });
-    
-    const checkRunId = checkRunResponse.data.id;
-
     const body = {
       testRunId,
       buildId: customBuildId || undefined,
@@ -151,18 +112,35 @@ const run = async () => {
         repo: context.repo.repo,
         is_pr: Boolean(context.payload.pull_request),
         github_token: process.env.GITHUB_TOKEN,
-        check_run_id: checkRunId,
       }
     };
 
-    const response = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
+    const triggerTestRun = await fetch('https://dev.moropo.com/.netlify/functions/triggerTestRun', {
       method: 'POST',
       body: JSON.stringify(body),
       headers: headers
     });
     
-    if(!response.ok){
+    if(!triggerTestRun.ok){
       core.setFailed(`Failed to schedule a test: ${response.statusText}`)
+    }
+
+    const { data: testRunData } = triggerTestRun.json();
+    const { testRunId: newTestRunId } = testRunData
+
+    const statusCheck = await fetch('https://dev.moropo.com/.netlify/functions/updateCIComment', {
+      method: 'POST',
+      headers: {
+        'x-github-token': token,
+      },
+      body: JSON.stringify({
+        testRunId: newTestRunId,
+        githubInfo: body.githubInfo,
+      })
+    });
+    
+    if(!statusCheck.ok){
+      core.setFailed(`Failed to fetch test status: ${response.statusText}`)
     }
   } catch (error) {
     core.setFailed(error.message);
