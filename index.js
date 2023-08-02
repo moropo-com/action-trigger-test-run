@@ -122,11 +122,11 @@ const run = async () => {
     });
     
     if(!triggerTestRun.ok){
-      core.setFailed(`Failed to schedule a test: ${response.statusText}`)
+      core.setFailed(`Failed to schedule a test: ${triggerTestRun.statusText}`)
     }
 
-    const { data: testRunData } = triggerTestRun.json();
-    const { testRunId: newTestRunId } = testRunData
+    const { data: testRunData } = await triggerTestRun.json();
+    const { testRunId: newTestRunId } = testRunData;
 
     const statusCheck = await fetch('https://dev.moropo.com/.netlify/functions/updateCIComment', {
       method: 'POST',
@@ -140,7 +140,7 @@ const run = async () => {
     });
     
     if(!statusCheck.ok){
-      core.setFailed(`Failed to fetch test status: ${response.statusText}`)
+      core.setFailed(`Failed to fetch test status: ${statusCheck.statusText}`)
     }
   } catch (error) {
     core.setFailed(error.message);
