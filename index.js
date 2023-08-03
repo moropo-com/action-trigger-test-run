@@ -116,7 +116,7 @@ const run = async () => {
     });
     
     if(!triggerTestRun.ok){
-      core.setFailed(`Failed to schedule a test: ${triggerTestRun.statusText}`)
+      throw new Error(`Failed to schedule a test: ${triggerTestRun.statusText}`)
     }
 
     const testRunResponse = await triggerTestRun.json();
@@ -140,7 +140,7 @@ const run = async () => {
     });
     
     if(!statusCheck.ok){
-      core.setFailed(`Failed to fetch test status: ${statusCheck.statusText}`)
+      throw new Error(`Failed to fetch test status: ${statusCheck.statusText}`)
     }
   } catch (error) {
     core.setFailed(error.message);
