@@ -10,8 +10,6 @@ inputs:
   expo_release_channel:
     description: "Expo Release Channel (optional) - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run."
     required: false
-  build_input:
-    description: "Blob or URL (optional) - app product from another action or download URL to override the App Build to test with."
 runs:
   using: "docker"
   image: "Dockerfile"
