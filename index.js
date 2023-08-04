@@ -117,7 +117,7 @@ const run = async () => {
 
       comment_id = initialComment.data.id;
     }
-
+    
     const testRunResponse = await triggerTestRun.json();
     const newTestRunId = testRunResponse.newTestRunId;
 
@@ -139,7 +139,8 @@ const run = async () => {
     });
     
     if(!statusCheck.ok){
-      throw new Error(`Failed to fetch test status: ${statusCheck.statusText}`)
+      const statusCheckBody = await statusCheck.json();
+      throw new Error(`Failed to fetch test status: ${statusCheckBody?.message}`)
     }
   } catch (error) {
     core.setFailed(error.message);
