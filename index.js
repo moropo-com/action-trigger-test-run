@@ -56,7 +56,8 @@ const run = async () => {
     });
     
     if(!triggerTestRun.ok){
-      throw new Error(`Failed to schedule a test: ${triggerTestRun?.message}`)
+      const statusCheckBody = await triggerTestRun.json();
+      throw new Error(`Failed to schedule a test: ${statusCheckBody?.message}`)
     }
 
     const context = github.context;
