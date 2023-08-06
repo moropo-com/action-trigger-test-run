@@ -25,8 +25,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Moropo Mobile App Test
-        uses: actions/moropo-trigger-mobile-app-test-run@v1
+      - name: Moropo - Trigger Mobile App Test Run
+        uses: moropo-com/action-trigger-test-run@v1.0.0
         with:
           scheduled_test_id: ...
           app_secret: ${{ secrets.MOROPO_APP_SECRET }}
