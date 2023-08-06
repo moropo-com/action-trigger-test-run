@@ -55,8 +55,9 @@ const run = async () => {
       headers: headers
     });
     
+    const triggerTestBody = await triggerTestRun.json();
+
     if(!triggerTestRun.ok){
-      const statusCheckBody = await triggerTestRun.json();
       throw new Error(`Failed to schedule a test: ${statusCheckBody?.message}`)
     }
 
@@ -95,8 +96,7 @@ const run = async () => {
       comment_id = initialComment.data.id;
     }
     
-    const testRunResponse = await triggerTestRun.json();
-    const newTestRunId = testRunResponse.newTestRunId;
+    const newTestRunId = triggerTestBody.newTestRunId;
 
     const statusCheck = await fetch('https://test.moropo.com/.netlify/functions/updateCIComment', {
       method: 'POST',
