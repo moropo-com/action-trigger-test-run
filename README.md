@@ -28,9 +28,14 @@ jobs:
       - name: Moropo - Trigger Mobile App Test Run
         uses: moropo-com/action-trigger-test-run@v1.0.0
         with:
-          scheduled_test_id: ...
           app_secret: ${{ secrets.MOROPO_APP_SECRET }}
-          expo_release_channel: ...
+          
+          # REPLACE WITH YOUR OWN
+          scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+          
+          # REPLACE WITH YOUR OWN
+          expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android&disableOnboarding=1
+
 ```
 
 In this example, this action will run whenever a push to the master branch occurs. 
@@ -39,12 +44,35 @@ In this example, this action will run whenever a push to the master branch occur
 
 ### `scheduled_test_id`
 **Required** - Moropo Scheduled Test ID, find this in your scheduled test setup wizard.
+It follows the UUID schema, e.g.
+```
+      - name: Moropo - Trigger Mobile App Test Run
+        uses: moropo-com/action-trigger-test-run@v1.0.0
+        with:
+            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+```
 
 ### `app_secret`
 **Required** - Moropo App Secret Key, find this in your app in the Moropo dashboard.
+It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however we recommend to use Github Secrets for this parameter and provide as follows:
+```
+      - name: Moropo - Trigger Mobile App Test Run
+        uses: moropo-com/action-trigger-test-run@v1.0.0
+        with:
+          scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+          app_secret: ${{ secrets.MOROPO_APP_SECRET }}
+```
 
 ### `expo_release_channel`
 **Optional** - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run.
+It follows the regular Expo release channel schema, e.g.
+```
+      - name: Moropo - Trigger Mobile App Test Run
+        uses: moropo-com/action-trigger-test-run@v1.0.0
+        with:
+            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+            expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android&disableOnboarding=1
+```
 
 ## Storing Secrets
 
