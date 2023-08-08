@@ -34,7 +34,7 @@ jobs:
           scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
           
           # REPLACE WITH YOUR OWN
-          expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android&disableOnboarding=1
+          expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
 
 ```
 
@@ -71,7 +71,17 @@ It follows the regular Expo release channel schema, e.g.
         uses: moropo-com/action-trigger-test-run@v1.0.0
         with:
             scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-            expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android&disableOnboarding=1
+            expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
+```
+
+### `github_token`
+**Optional** - so that the action can comment on the PR with the test trigger feedback.
+```
+      - name: Moropo - Trigger Mobile App Test Run
+        uses: moropo-com/action-trigger-test-run@v1.0.0
+        with:
+            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+            github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Storing Secrets

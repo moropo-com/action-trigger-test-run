@@ -49,6 +49,7 @@ const run = async (): Promise<void> => {
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const testRunId = core.getInput('scheduled_test_id');
     const moropoApiKey = core.getInput('app_secret');
+    const githubToken = core.getInput('github_token');
 
     const headers: Record<string,string> = {
       'Content-Type': 'application/json'
@@ -58,9 +59,6 @@ const run = async (): Promise<void> => {
       headers['x-moropo-api-key'] = moropoApiKey;
     }
 
-    const octokit = new Octokit({
-      auth: process.env.GITHUB_TOKEN!,
-    });
 
     const body = {
       testRunId,
@@ -78,6 +76,12 @@ const run = async (): Promise<void> => {
     if(!triggerTestRun.ok){
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`)
     }
+
+    if(!githubToken)  return console.log('No github token provided, skipping comment creation');
+    
+    const octokit = new Octokit({
+      auth: githubToken,
+    });
 
     const context = github.context;
 
