@@ -9782,13 +9782,11 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!triggerTestRun.ok) {
             throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
         }
-        console.log({ githubToken });
         if (!githubToken)
             return console.log('No github token provided, skipping comment creation');
         const octokit = new rest_1.Octokit({
             auth: githubToken,
         });
-        console.log({ octokit });
         const context = github.context;
         const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
         const commentText = buildMessageString({
@@ -9798,7 +9796,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             expoReleaseChannel: finalReleaseChannel,
             url
         });
-        console.log(commentText);
         if (context.payload.pull_request) {
             yield octokit.issues.createComment({
                 owner: context.repo.owner,
