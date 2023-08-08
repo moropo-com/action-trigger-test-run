@@ -77,12 +77,13 @@ const run = async (): Promise<void> => {
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`)
     }
 
-    if(!githubToken)  return console.log('No github token provided, skipping comment creation');
-    
+    console.log({githubToken})
+    if(!githubToken) return console.log('No github token provided, skipping comment creation');
+
     const octokit = new Octokit({
       auth: githubToken,
     });
-
+    console.log({octokit})
     const context = github.context;
 
     const {buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url} = triggerTestBody?.testRunInfo
@@ -93,7 +94,7 @@ const run = async (): Promise<void> => {
       expoReleaseChannel: finalReleaseChannel,
       url
     });
-
+    console.log(commentText)
     if (context.payload.pull_request) {
       await octokit.issues.createComment({
         owner: context.repo.owner,
