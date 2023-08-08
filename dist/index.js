@@ -9785,54 +9785,29 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
         }
         const context = github.context;
-        let comment_id;
+        const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
         const commentText = buildMessageString({
-            buildId: '-',
-            devices: '-',
-            tests: '-',
-            expoReleaseChannel: '-',
-            url: '#'
+            buildId,
+            devices: devices.join('<br>'),
+            tests: tests.join('<br>'),
+            expoReleaseChannel: finalReleaseChannel,
+            url
         });
         if (context.payload.pull_request) {
-            const pull_request_number = context.payload.pull_request.number;
-            const initialComment = yield octokit.issues.createComment({
+            yield octokit.issues.createComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: pull_request_number,
+                issue_number: context.payload.pull_request.number,
                 body: commentText,
             });
-            comment_id = initialComment.data.id;
         }
         else {
-            const sha = context.sha;
-            const initialComment = yield octokit.repos.createCommitComment({
+            yield octokit.repos.createCommitComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                commit_sha: sha,
+                commit_sha: context.sha,
                 body: commentText,
             });
-            comment_id = initialComment.data.id;
-        }
-        const newTestRunId = triggerTestBody.newTestRunId;
-        const statusCheck = yield (0, node_fetch_1.default)('https://test.moropo.com/.netlify/functions/updateCIComment', {
-            method: 'POST',
-            headers: {
-                'x-github-token': process.env.GITHUB_TOKEN,
-            },
-            body: JSON.stringify({
-                testRunId: newTestRunId,
-                githubInfo: {
-                    comment_id,
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    is_pr: Boolean(context.payload.pull_request),
-                    github_token: process.env.GITHUB_TOKEN,
-                },
-            })
-        });
-        if (!statusCheck.ok) {
-            const statusCheckBody = yield statusCheck.json();
-            throw new Error(`Failed to fetch test status: ${statusCheckBody === null || statusCheckBody === void 0 ? void 0 : statusCheckBody.message}`);
         }
     }
     catch (error) {
