@@ -14,7 +14,7 @@ inputs:
   github_token:
     description: "GitHub access token (optional) - so that the action can comment on the PR with the test trigger feedback"
     required: false
-    default: ${{ secrets.GITHUB_TOKEN }}
+    default: ${{ github.token }}
 runs:
   using: "node16"
   main: "dist/index.js"
