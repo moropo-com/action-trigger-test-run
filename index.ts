@@ -1,7 +1,15 @@
-const core = require('@actions/core');
-const fetch = require('node-fetch');
-const { Octokit } = require("@octokit/rest");
-const github = require('@actions/github');
+import * as core from '@actions/core';
+import fetch from 'node-fetch';
+import { Octokit } from "@octokit/rest";
+import * as github from '@actions/github';
+
+interface MessageData {
+  buildId: string;
+  devices: string;
+  tests: string;
+  expoReleaseChannel: string;
+  url: string;
+}
 
 const buildMessageString = ({
   buildId,
@@ -9,7 +17,7 @@ const buildMessageString = ({
   tests,
   expoReleaseChannel,
   url,
-}) => `
+}: MessageData) => `
 ## Moropo Test Run
 
 ### Summary
@@ -25,14 +33,13 @@ const buildMessageString = ({
 [View Results](${url})
 `;
 
-
-const run = async () => {
+const run = async (): Promise<void> => {
   try {
     const expoReleaseChannel = core.getInput('expo_release_channel');
     const testRunId = core.getInput('scheduled_test_id');
     const moropoApiKey = core.getInput('app_secret');
 
-    const headers = {
+    const headers: Record<string,string> = {
       'Content-Type': 'application/json'
     };
 
@@ -41,7 +48,7 @@ const run = async () => {
     }
 
     const octokit = new Octokit({
-      auth: process.env.GITHUB_TOKEN,
+      auth: process.env.GITHUB_TOKEN!,
     });
 
     const body = {
@@ -62,9 +69,9 @@ const run = async () => {
     }
 
     const context = github.context;
-    let comment_id;
+    let comment_id: number;
 
-    let commentText = buildMessageString({
+    const commentText = buildMessageString({
       buildId: '-',
       devices: '-',
       tests: '-',
@@ -101,7 +108,7 @@ const run = async () => {
     const statusCheck = await fetch('https://test.moropo.com/.netlify/functions/updateCIComment', {
       method: 'POST',
       headers: {
-        'x-github-token': process.env.GITHUB_TOKEN,
+        'x-github-token': process.env.GITHUB_TOKEN!,
       },
       body: JSON.stringify({
         testRunId: newTestRunId,
@@ -120,7 +127,11 @@ const run = async () => {
       throw new Error(`Failed to fetch test status: ${statusCheckBody?.message}`)
     }
   } catch (error) {
-    core.setFailed(error.message);
+    if (typeof error === 'string') {
+      core.setFailed(error);
+    } else {
+      core.setFailed((error as Error).message);
+    }
   }
 };
 

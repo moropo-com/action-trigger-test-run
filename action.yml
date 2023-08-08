@@ -12,8 +12,8 @@ inputs:
     description: "Expo Release Channel (optional) - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run."
     required: false
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "node16"
+  main: "dist/index.js"
 branding:
   icon: "check"
   color: "blue"
