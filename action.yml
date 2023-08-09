@@ -1,15 +1,15 @@
 name: "Moropo - Trigger Mobile App Test Run"
-author: "Moropo Limited"
+author: "Moropo"
 description: "Uses Moropo.com to execute a mobile app UI test"
 inputs:
   scheduled_test_id:
     description: "Moropo Scheduled Test ID - find this in your scheduled test setup wizard"
     required: true
-  app_secret:
-    description: "Moropo App Secret Key - find this in your app in the Moropo dashboard"
+  api_key:
+    description: "Moropo Api Key - find this in your app settings in the Moropo dashboard"
     required: true
   expo_release_channel:
-    description: "Expo Release Channel (optional) - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run."
+    description: "Expo Release Channel (optional) - Pass this release channel to your test run"
     required: false
   github_token:
     description: "GitHub access token (optional) - so that the action can comment on the PR with the test trigger feedback"

@@ -48,7 +48,7 @@ const run = async (): Promise<void> => {
   try {
     const expoReleaseChannel = core.getInput("expo_release_channel");
     const testRunId = core.getInput("scheduled_test_id");
-    const moropoApiKey = core.getInput("app_secret");
+    const moropoApiKey = core.getInput("api_key");
     const githubToken = core.getInput("github_token");
 
     const headers: Record<string, string> = {
