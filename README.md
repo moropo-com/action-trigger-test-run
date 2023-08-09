@@ -27,9 +27,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1.0.0
+        uses: moropo-com/action-trigger-test-run@v1.0.3
         with:
-          app_secret: ${{ secrets.MOROPO_APP_SECRET }}
+          api_key: ${{ secrets.MOROPO_API_KEY }}
 
           # REPLACE WITH YOUR OWN
           scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
@@ -47,24 +47,24 @@ In this example, this action will run whenever a push to the master branch occur
 **Required** - Moropo Scheduled Test ID, find this in your scheduled test setup wizard.
 It follows the UUID schema, e.g.
 
-```
-      - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1.0.0
-        with:
-            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+```yaml
+- name: Moropo - Trigger Mobile App Test Run
+  uses: moropo-com/action-trigger-test-run@v1.0.3
+  with:
+    scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
 ```
 
-### `app_secret`
+### `api_key`
 
 **Required** - Moropo App Secret Key, find this in your app in the Moropo dashboard.
 It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however we recommend to use Github Secrets for this parameter and provide as follows:
 
-```
-      - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1.0.0
-        with:
-          scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-          app_secret: ${{ secrets.MOROPO_APP_SECRET }}
+```yaml
+- name: Moropo - Trigger Mobile App Test Run
+  uses: moropo-com/action-trigger-test-run@v1.0.3
+  with:
+    scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+    api_key: ${{ secrets.MOROPO_API_KEY }}
 ```
 
 ### `expo_release_channel`
@@ -72,31 +72,19 @@ It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however
 **Optional** - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run.
 It follows the regular Expo release channel schema, e.g.
 
-```
-      - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1.0.0
-        with:
-            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-            expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
-```
-
-### `github_token`
-
-**Optional** - so that the action can comment on the PR with the test trigger feedback.
-
-```
-      - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1.0.0
-        with:
-            scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-            github_token: ${{ secrets.GITHUB_TOKEN }}
+```yaml
+- name: Moropo - Trigger Mobile App Test Run
+  uses: moropo-com/action-trigger-test-run@v1.0.3
+  with:
+    scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
+    expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
 ```
 
 ## Storing Secrets
 
-The `app_secret` should be kept private. You can use GitHub secrets to protect it. To add a secret:
+The `api_key` should be kept private. You can use GitHub secrets to protect it. To add a secret:
 
 1. Navigate to your GitHub repository and click on the `Settings` tab.
 2. Click on `Secrets` in the left sidebar.
 3. Click `New repository secret`.
-4. Enter `MOROPO_APP_SECRET` as the names for the secrets, and paste the corresponding keys in the values field.
+4. Enter `MOROPO_API_KEY` as the names for the secrets, and paste the corresponding keys in the values field.
