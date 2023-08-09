@@ -9816,8 +9816,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             }
         }
         catch (error) {
-            console.log("Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.");
-            console.log(error);
+            console.warn("Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.");
         }
     }
     catch (error) {

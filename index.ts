@@ -123,10 +123,9 @@ const run = async (): Promise<void> => {
         });
       }
     } catch (error) {
-      console.log(
+      console.warn(
         "Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions."
       );
-      console.log(error);
     }
   } catch (error) {
     if (typeof error === "string") {
