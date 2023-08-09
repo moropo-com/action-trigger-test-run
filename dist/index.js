@@ -9759,59 +9759,68 @@ const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, 
 `;
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const expoReleaseChannel = core.getInput('expo_release_channel');
-        const testRunId = core.getInput('scheduled_test_id');
-        const moropoApiKey = core.getInput('app_secret');
+        const expoReleaseChannel = core.getInput("expo_release_channel");
+        const testRunId = core.getInput("scheduled_test_id");
+        const moropoApiKey = core.getInput("app_secret");
+        const githubToken = core.getInput("github_token");
         const headers = {
-            'Content-Type': 'application/json'
+            "Content-Type": "application/json",
         };
         if (moropoApiKey) {
-            headers['x-moropo-api-key'] = moropoApiKey;
+            headers["x-moropo-api-key"] = moropoApiKey;
         }
-        const octokit = new rest_1.Octokit({
-            auth: process.env.GITHUB_TOKEN,
-        });
         const body = {
             testRunId,
             expoReleaseChannel,
         };
-        const triggerTestRun = yield (0, node_fetch_1.default)('https://test.moropo.com/.netlify/functions/triggerTestRun', {
-            method: 'POST',
+        const triggerTestRun = yield (0, node_fetch_1.default)("https://test.moropo.com/.netlify/functions/triggerTestRun", {
+            method: "POST",
             body: JSON.stringify(body),
-            headers: headers
+            headers: headers,
         });
         const triggerTestBody = yield triggerTestRun.json();
         if (!triggerTestRun.ok) {
             throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
         }
-        const context = github.context;
-        const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
-        const commentText = buildMessageString({
-            buildId,
-            devices: devices.join('<br>'),
-            tests: tests.join('<br>'),
-            expoReleaseChannel: finalReleaseChannel,
-            url
-        });
-        if (context.payload.pull_request) {
-            yield octokit.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                body: commentText,
+        console.log("Test triggered successfully");
+        if (!githubToken)
+            return console.warn("No github token provided, skipping comment creation");
+        try {
+            const octokit = new rest_1.Octokit({
+                auth: githubToken,
             });
+            const context = github.context;
+            const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
+            const commentText = buildMessageString({
+                buildId,
+                devices: devices.join("<br>"),
+                tests: tests.join("<br>"),
+                expoReleaseChannel: finalReleaseChannel,
+                url,
+            });
+            if (context.payload.pull_request) {
+                yield octokit.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: context.payload.pull_request.number,
+                    body: commentText,
+                });
+            }
+            else {
+                yield octokit.repos.createCommitComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    commit_sha: context.sha,
+                    body: commentText,
+                });
+            }
         }
-        else {
-            yield octokit.repos.createCommitComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                commit_sha: context.sha,
-                body: commentText,
-            });
+        catch (error) {
+            console.warn("Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.");
         }
     }
     catch (error) {
-        if (typeof error === 'string') {
+        if (typeof error === "string") {
             core.setFailed(error);
         }
         else {

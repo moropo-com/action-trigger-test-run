@@ -11,6 +11,10 @@ inputs:
   expo_release_channel:
     description: "Expo Release Channel (optional) - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run."
     required: false
+  github_token:
+    description: "GitHub access token (optional) - so that the action can comment on the PR with the test trigger feedback"
+    required: false
+    default: ${{ github.token }}
 runs:
   using: "node16"
   main: "dist/index.js"
