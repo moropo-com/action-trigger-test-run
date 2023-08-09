@@ -1,7 +1,7 @@
-import * as core from '@actions/core';
-import fetch from 'node-fetch';
+import * as core from "@actions/core";
+import fetch from "node-fetch";
 import { Octokit } from "@octokit/rest";
-import * as github from '@actions/github';
+import * as github from "@actions/github";
 
 interface MessageData {
   buildId: string;
@@ -11,7 +11,7 @@ interface MessageData {
   url: string;
 }
 
-interface ITriggerTestRunResponse  { 
+interface ITriggerTestRunResponse {
   message: string;
   testRunInfo: {
     buildId: string;
@@ -19,7 +19,7 @@ interface ITriggerTestRunResponse  {
     tests: string[];
     expoReleaseChannel: string;
     url: string;
-  }
+  };
 }
 
 const buildMessageString = ({
@@ -46,70 +46,90 @@ const buildMessageString = ({
 
 const run = async (): Promise<void> => {
   try {
-    const expoReleaseChannel = core.getInput('expo_release_channel');
-    const testRunId = core.getInput('scheduled_test_id');
-    const moropoApiKey = core.getInput('app_secret');
-    const githubToken = core.getInput('github_token');
+    const expoReleaseChannel = core.getInput("expo_release_channel");
+    const testRunId = core.getInput("scheduled_test_id");
+    const moropoApiKey = core.getInput("app_secret");
+    const githubToken = core.getInput("github_token");
 
-    const headers: Record<string,string> = {
-      'Content-Type': 'application/json'
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
     };
 
-    if(moropoApiKey) {
-      headers['x-moropo-api-key'] = moropoApiKey;
+    if (moropoApiKey) {
+      headers["x-moropo-api-key"] = moropoApiKey;
     }
-
 
     const body = {
       testRunId,
       expoReleaseChannel,
     };
 
-    const triggerTestRun = await fetch('https://test.moropo.com/.netlify/functions/triggerTestRun', {
-      method: 'POST',
-      body: JSON.stringify(body),
-      headers: headers
-    });
-    
-    const triggerTestBody: ITriggerTestRunResponse = await triggerTestRun.json();
+    const triggerTestRun = await fetch(
+      "https://test.moropo.com/.netlify/functions/triggerTestRun",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: headers,
+      }
+    );
 
-    if(!triggerTestRun.ok){
-      throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`)
+    const triggerTestBody: ITriggerTestRunResponse =
+      await triggerTestRun.json();
+
+    if (!triggerTestRun.ok) {
+      throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
     }
 
-    if(!githubToken) return console.log('No github token provided, skipping comment creation');
+    console.log("Test triggered successfully");
 
-    const octokit = new Octokit({
-      auth: githubToken,
-    });
-    const context = github.context;
+    if (!githubToken)
+      return console.warn(
+        "No github token provided, skipping comment creation"
+      );
 
-    const {buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url} = triggerTestBody?.testRunInfo
-    const commentText = buildMessageString({
-      buildId,
-      devices: devices.join('<br>'),
-      tests: tests.join('<br>'),
-      expoReleaseChannel: finalReleaseChannel,
-      url
-    });
-    if (context.payload.pull_request) {
-      await octokit.issues.createComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        issue_number: context.payload.pull_request.number,
-        body: commentText,
+    try {
+      const octokit = new Octokit({
+        auth: githubToken,
       });
-    } else {
-      await octokit.repos.createCommitComment({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        commit_sha: context.sha,
-        body: commentText,
-      });
+      const context = github.context;
 
+      const {
+        buildId,
+        devices,
+        tests,
+        expoReleaseChannel: finalReleaseChannel,
+        url,
+      } = triggerTestBody?.testRunInfo;
+      const commentText = buildMessageString({
+        buildId,
+        devices: devices.join("<br>"),
+        tests: tests.join("<br>"),
+        expoReleaseChannel: finalReleaseChannel,
+        url,
+      });
+      if (context.payload.pull_request) {
+        await octokit.issues.createComment({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: context.payload.pull_request.number,
+          body: commentText,
+        });
+      } else {
+        await octokit.repos.createCommitComment({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          commit_sha: context.sha,
+          body: commentText,
+        });
+      }
+    } catch (error) {
+      console.log(
+        "Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions."
+      );
+      console.log(error);
     }
   } catch (error) {
-    if (typeof error === 'string') {
+    if (typeof error === "string") {
       core.setFailed(error);
     } else {
       core.setFailed((error as Error).message);
