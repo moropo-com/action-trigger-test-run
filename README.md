@@ -87,4 +87,4 @@ The `api_key` should be kept private. You can use GitHub secrets to protect it. 
 1. Navigate to your GitHub repository and click on the `Settings` tab.
 2. Click on `Secrets` in the left sidebar.
 3. Click `New repository secret`.
-4. Enter `MOROPO_API_KEY` as the names for the secrets, and paste the corresponding keys in the values field.
+4. Enter `MOROPO_API_KEY` as the name for the secrets, and paste the corresponding key in the value field.
