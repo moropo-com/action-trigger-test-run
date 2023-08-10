@@ -46,7 +46,12 @@ const buildMessageString = ({
 
 const run = async (): Promise<void> => {
   try {
-    const expoReleaseChannel = core.getInput("expo_release_channel");
+    let expoReleaseChannel: string | null = core.getInput(
+      "expo_release_channel"
+    );
+    if (!expoReleaseChannel?.length) {
+      expoReleaseChannel = null;
+    }
     const testRunId = core.getInput("scheduled_test_id");
     const moropoApiKey = core.getInput("api_key");
     const githubToken = core.getInput("github_token");
@@ -65,7 +70,7 @@ const run = async (): Promise<void> => {
     };
 
     const triggerTestRun = await fetch(
-      "https://test.moropo.com/.netlify/functions/triggerTestRun",
+      "https://app.moropo.com/.netlify/functions/triggerTestRun",
       {
         method: "POST",
         body: JSON.stringify(body),
