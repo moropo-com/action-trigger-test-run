@@ -9759,7 +9759,10 @@ const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, 
 `;
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const expoReleaseChannel = core.getInput("expo_release_channel");
+        let expoReleaseChannel = core.getInput("expo_release_channel");
+        if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
+            expoReleaseChannel = null;
+        }
         const testRunId = core.getInput("scheduled_test_id");
         const moropoApiKey = core.getInput("api_key");
         const githubToken = core.getInput("github_token");
@@ -9773,7 +9776,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             testRunId,
             expoReleaseChannel,
         };
-        const triggerTestRun = yield (0, node_fetch_1.default)("https://test.moropo.com/.netlify/functions/triggerTestRun", {
+        const triggerTestRun = yield (0, node_fetch_1.default)("https://app.moropo.com/.netlify/functions/triggerTestRun", {
             method: "POST",
             body: JSON.stringify(body),
             headers: headers,
