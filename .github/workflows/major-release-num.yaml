@@ -1,6 +1,7 @@
 name: Move Major Release Tag
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 
