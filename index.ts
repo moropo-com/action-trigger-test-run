@@ -70,7 +70,7 @@ const run = async (): Promise<void> => {
     };
 
     const triggerTestRun = await fetch(
-      "https://test.moropo.com/.netlify/functions/triggerTestRun",
+      "https://dev.moropo.com/.netlify/functions/triggerTestRun",
       {
         method: "POST",
         body: JSON.stringify(body),
