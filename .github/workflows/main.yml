@@ -1,0 +1,32 @@
+name: test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Download test APK
+        run: |
+          wget https://eallbplujihoifwkgzdq.supabase.co/storage/v1/object/public/public/android.apk -O /tmp/android.apk
+
+      - name: Test Action
+        uses: ./
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          upload_build: true
+          scheduled_test_id: 0d79c9e9-bc8b-4e0f-8c74-c34f8ddb49aa
+          api_key: ${{ secrets.API_KEY }}
+          build_path: /tmp/android.apk
+          moropo_url: https://dev.moropo.com
+          moropo_api_url: https://api.dev.moropo.com
