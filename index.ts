@@ -1,7 +1,11 @@
-import * as core from "@actions/core";
-import fetch from "node-fetch";
-import { Octokit } from "@octokit/rest";
-import * as github from "@actions/github";
+import { getInput, setFailed } from '@actions/core';
+import * as github from '@actions/github';
+import { Octokit } from '@octokit/rest';
+import FormData from 'form-data';
+import { existsSync } from 'fs';
+import { readFile } from 'fs/promises';
+import fetch from 'node-fetch';
+import path from 'path';
 
 interface MessageData {
   buildId: string;
@@ -44,52 +48,89 @@ const buildMessageString = ({
 [View Results](${url})
 `;
 
+const uploadBuild = async (url: URL, apiKey: string, buildPath: string) => {
+  if (!existsSync(buildPath)) {
+    throw new Error('Build file not found');
+  }
+
+  const fileName = path.basename(buildPath);
+  const fileData = await readFile(buildPath);
+  const formData = new FormData();
+  formData.append('file', fileData, {
+    filename: fileName,
+    filepath: buildPath,
+  });
+
+  const buildUpload = await fetch(`${url}apps/builds`, {
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-App-Api-Key': apiKey,
+      'User-Agent': 'moropo-github-action',
+    },
+  });
+
+  if (!buildUpload.ok) {
+    throw new Error(`Failed to upload build: ${await buildUpload.text()}`);
+  }
+
+  console.info('Build uploaded successfully');
+};
+
 const run = async (): Promise<void> => {
   try {
-    let expoReleaseChannel: string | null = core.getInput(
-      "expo_release_channel"
-    );
+    let expoReleaseChannel: string | null = getInput('expo_release_channel');
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    const testRunId = core.getInput("scheduled_test_id");
-    const moropoApiKey = core.getInput("api_key");
-    const githubToken = core.getInput("github_token");
+    const scheduledTestRunId = getInput('scheduled_test_id');
+    const apiKey = getInput('api_key');
+    const githubToken = getInput('github_token');
+    const buildPath = getInput('build_path');
+    const shouldUploadBuild = getInput('upload_build') === 'true';
+    const moropoUrl = new URL(getInput('moropo_url'));
+    const moropoApiUrl = new URL(getInput('moropo_api_url'));
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (moropoApiKey) {
-      headers["x-moropo-api-key"] = moropoApiKey;
+    if (!moropoUrl || !moropoApiUrl || !apiKey || !scheduledTestRunId) {
+      setFailed(
+        'Missing one or more required inputs: moropo_url, moropo_api_url, api_key, scheduled_test_id'
+      );
+      return;
     }
 
-    const body = {
-      testRunId,
-      expoReleaseChannel,
-    };
+    // Upload build if provided
+    if (shouldUploadBuild) {
+      await uploadBuild(moropoApiUrl, apiKey, buildPath);
+    }
 
+    // Trigger test run
     const triggerTestRun = await fetch(
-      "https://app.moropo.com/.netlify/functions/triggerTestRun",
+      `${moropoUrl}.netlify/functions/triggerTestRun`,
       {
-        method: "POST",
-        body: JSON.stringify(body),
-        headers: headers,
+        method: 'POST',
+        body: JSON.stringify({
+          testRunId: scheduledTestRunId,
+          expoReleaseChannel,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-moropo-api-key': apiKey,
+          'User-Agent': 'moropo-github-action',
+        },
       }
     );
 
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
-
     if (!triggerTestRun.ok) {
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
     }
 
-    console.log("Test triggered successfully");
+    console.info('Test triggered successfully');
 
     if (!githubToken)
       return console.warn(
-        "No github token provided, skipping comment creation"
+        'No github token provided, skipping comment creation'
       );
 
     try {
@@ -107,8 +148,8 @@ const run = async (): Promise<void> => {
       } = triggerTestBody?.testRunInfo;
       const commentText = buildMessageString({
         buildId,
-        devices: devices.join("<br>"),
-        tests: tests.join("<br>"),
+        devices: devices.join('<br>'),
+        tests: tests.join('<br>'),
         expoReleaseChannel: finalReleaseChannel,
         url,
       });
@@ -129,14 +170,14 @@ const run = async (): Promise<void> => {
       }
     } catch (error) {
       console.warn(
-        "Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions."
+        'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
       );
     }
   } catch (error) {
-    if (typeof error === "string") {
-      core.setFailed(error);
+    if (typeof error === 'string') {
+      setFailed(error);
     } else {
-      core.setFailed((error as Error).message);
+      setFailed((error as Error).message);
     }
   }
 };
