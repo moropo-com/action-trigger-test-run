@@ -1,15 +1,17 @@
+name: Build Source
+
 on:
   workflow_dispatch:
   push:
     branches:
       - master
 
-name: build-release
-
 jobs:
   build:
-    name: build-release
+    name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -38,4 +40,4 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+          branch: master
