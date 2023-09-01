@@ -7,7 +7,7 @@ import { readFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
 
-interface MessageData {
+interface IMessageData {
   buildId: string;
   devices: string;
   tests: string;
@@ -26,13 +26,18 @@ interface ITriggerTestRunResponse {
   };
 }
 
+interface IBuildUploadResponse {
+  message?: string;
+  buildId?: number;
+}
+
 const buildMessageString = ({
   buildId,
   devices,
   tests,
   expoReleaseChannel,
   url,
-}: MessageData) => `
+}: IMessageData) => `
 ## Moropo Test Run
 
 ### Summary
@@ -48,7 +53,11 @@ const buildMessageString = ({
 [View Results](${url})
 `;
 
-const uploadBuild = async (url: URL, apiKey: string, buildPath: string) => {
+const uploadBuild = async (
+  url: URL,
+  apiKey: string,
+  buildPath: string
+): Promise<IBuildUploadResponse> => {
   if (!existsSync(buildPath)) {
     throw new Error('Build file not found');
   }
@@ -70,11 +79,14 @@ const uploadBuild = async (url: URL, apiKey: string, buildPath: string) => {
     },
   });
 
-  if (!buildUpload.ok) {
-    throw new Error(`Failed to upload build: ${await buildUpload.text()}`);
-  }
+  const responseJson = await buildUpload.json();
 
-  console.info('Build uploaded successfully');
+  if (!buildUpload.ok) {
+    throw new Error(`Failed to upload build: ${JSON.stringify(responseJson)}`);
+  }
+  console.info('Successfully uploaded build.');
+
+  return responseJson;
 };
 
 const run = async (): Promise<void> => {
@@ -87,7 +99,6 @@ const run = async (): Promise<void> => {
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
     const buildPath = getInput('build_path');
-    const shouldUploadBuild = getInput('upload_build') === 'true';
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
 
@@ -99,8 +110,9 @@ const run = async (): Promise<void> => {
     }
 
     // Upload build if provided
-    if (shouldUploadBuild) {
-      await uploadBuild(moropoApiUrl, apiKey, buildPath);
+    let buildId: number | undefined;
+    if (buildPath) {
+      buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
     }
 
     // Trigger test run
@@ -111,6 +123,7 @@ const run = async (): Promise<void> => {
         body: JSON.stringify({
           testRunId: scheduledTestRunId,
           expoReleaseChannel,
+          buildId,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -119,18 +132,17 @@ const run = async (): Promise<void> => {
         },
       }
     );
-
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
     if (!triggerTestRun.ok) {
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
     }
 
-    console.info('Test triggered successfully');
+    console.info('Successfully triggered a test run.');
 
     if (!githubToken)
       return console.warn(
-        'No github token provided, skipping comment creation'
+        'No github token provided, not creating a GitHub comment.'
       );
 
     try {
