@@ -11290,10 +11290,12 @@ const uploadBuild = (url, apiKey, buildPath) => __awaiter(void 0, void 0, void 0
             'User-Agent': 'moropo-github-action',
         },
     });
+    const responseJson = yield buildUpload.json();
     if (!buildUpload.ok) {
-        throw new Error(`Failed to upload build: ${yield buildUpload.text()}`);
+        throw new Error(`Failed to upload build: ${JSON.stringify(responseJson)}`);
     }
-    console.info('Build uploaded successfully');
+    console.info('Successfully uploaded build.');
+    return responseJson;
 });
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -11305,16 +11307,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const apiKey = (0, core_1.getInput)('api_key');
         const githubToken = (0, core_1.getInput)('github_token');
         const buildPath = (0, core_1.getInput)('build_path');
-        const shouldUploadBuild = (0, core_1.getInput)('upload_build') === 'true';
         const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
         const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
-        if (!moropoUrl || !moropoApiUrl || !apiKey || !scheduledTestRunId) {
-            (0, core_1.setFailed)('Missing one or more required inputs: moropo_url, moropo_api_url, api_key, scheduled_test_id');
-            return;
-        }
         // Upload build if provided
-        if (shouldUploadBuild) {
-            yield uploadBuild(moropoApiUrl, apiKey, buildPath);
+        let buildId;
+        if (buildPath) {
+            buildId = (yield uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
         }
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoUrl}.netlify/functions/triggerTestRun`, {
@@ -11322,6 +11320,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             body: JSON.stringify({
                 testRunId: scheduledTestRunId,
                 expoReleaseChannel,
+                buildId,
             }),
             headers: {
                 'Content-Type': 'application/json',
@@ -11333,9 +11332,9 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!triggerTestRun.ok) {
             throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
         }
-        console.info('Test triggered successfully');
+        console.info('Successfully triggered a test run.');
         if (!githubToken)
-            return console.warn('No github token provided, skipping comment creation');
+            return console.warn('No github token provided, not creating a GitHub comment.');
         try {
             const octokit = new rest_1.Octokit({
                 auth: githubToken,

@@ -102,13 +102,6 @@ const run = async (): Promise<void> => {
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
 
-    if (!moropoUrl || !moropoApiUrl || !apiKey || !scheduledTestRunId) {
-      setFailed(
-        'Missing one or more required inputs: moropo_url, moropo_api_url, api_key, scheduled_test_id'
-      );
-      return;
-    }
-
     // Upload build if provided
     let buildId: number | undefined;
     if (buildPath) {
