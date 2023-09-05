@@ -80,6 +80,17 @@ It follows the regular Expo release channel schema, e.g.
     expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
 ```
 
+### `build_path`
+
+**Optional** - Path to the build artifact to upload to Moropo before running the test. Your test will be ran against this build when provided.
+
+```yaml
+- name: Moropo - Trigger Mobile App Test Run
+  uses: moropo-com/action-trigger-test-run@v1
+  with:
+    build_path: /path/to/your_app.apk # This can also be an app.zip for iOS.
+```
+
 ## Storing Secrets
 
 The `api_key` should be kept private. You can use GitHub secrets to protect it. To add a secret:

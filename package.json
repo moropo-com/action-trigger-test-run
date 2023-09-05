@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "description": "Moropo - Trigger Mobile App Test Run",
   "main": "index.ts",
+  "license": "MIT",
   "scripts": {
-    "build": "ncc build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "ncc build"
   },
   "author": "",
-  "license": "ISC",
   "dependencies": {
     "@actions/core": "^1.5.0",
     "@actions/github": "^5.0.0",
     "@octokit/rest": "^18.0.0",
+    "form-data": "^4.0.0",
     "node-fetch": "^2.6.1"
   },
   "devDependencies": {

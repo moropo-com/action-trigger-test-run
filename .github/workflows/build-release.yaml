@@ -1,25 +1,28 @@
+name: Build Source
+
 on:
   workflow_dispatch:
   push:
     branches:
       - master
 
-name: build-release
-
 jobs:
   build:
-    name: build-release
+    name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
-        uses: actions/checkout@master
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: '16.x'
 
-      - run: yarn
+      - name: Install Dependencies
+        run: yarn install
 
       - name: Compile files
         run: yarn build
@@ -31,10 +34,10 @@ jobs:
           git config --local user.name "Moropo"
 
           git add dist/index.js -f
-          git commit -m "Add changes"
+          git commit -m "[CI] Add changes"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: main
+          branch: master
