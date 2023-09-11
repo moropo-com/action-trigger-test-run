@@ -20,7 +20,7 @@ inputs:
     required: false
   moropo_url:
     description: 'For development purposes only - choose a different moropo frontend URL'
-    default: 'https://moropo.com'
+    default: 'https://app.moropo.com'
   moropo_api_url:
     description: 'For development purposes only - choose a different moropo API URL'
     default: 'https://api.moropo.com'
