@@ -136,10 +136,10 @@ const run = async (): Promise<void> => {
     }
 
     // Upload build if provided
-    // let buildId: number | undefined;
-    // if (buildPath) {
-    //   buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
-    // }
+    let buildId: number | undefined;
+    if (buildPath) {
+      buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+    }
 
     if (octokit && commentId) {
       const commentText = 'Triggering test...';
