@@ -154,7 +154,7 @@ const run = async (): Promise<void> => {
         body: JSON.stringify({
           testRunId: scheduledTestRunId,
           expoReleaseChannel,
-          buildId: 9999,
+          buildId,
           commentId,
           githubToken,
           isPullRequest: Boolean(context.payload.pull_request),
