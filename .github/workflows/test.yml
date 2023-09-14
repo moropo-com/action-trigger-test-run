@@ -9,7 +9,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Run Moropo Tests
-        uses: ./
+        uses: moropo-com/action-trigger-test-run@updating-gh-comments
         with:
           scheduled_test_id: 04f1acb4-c4d5-4389-b31e-55002a2ae059
           api_key: f81ba9de-7a49-4f04-a907-f27ca83b886a
