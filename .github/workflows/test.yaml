@@ -1,6 +1,5 @@
 name: Moropo Test Run
-on:
-  workflow_dispatch:
+on: pull_request
 permissions:
   pull-requests: write
 jobs:
