@@ -6,6 +6,8 @@ import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import fetch from 'node-fetch';
 import path from 'path';
+import { createComment } from './methods/createComment';
+import { updateComment } from './methods/updateComment';
 
 interface IMessageData {
   buildId: string;
@@ -102,10 +104,46 @@ const run = async (): Promise<void> => {
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
 
+    let octokit: Octokit | null = null;
+    let commentId: number | null = null;
+    const context = github.context;
+
+    try {
+      if (!githubToken) {
+        throw new Error(
+          'No github token provided, not creating a GitHub comment.'
+        );
+      }
+      octokit = new Octokit({
+        auth: githubToken,
+      });
+
+      const commentText = 'Uploading Build..';
+
+      const { commentId: newCommentId, error } = await createComment({
+        commentText,
+        context,
+        octokit,
+      });
+      if (error) {
+        throw new Error(error.toString());
+      }
+      commentId = newCommentId;
+    } catch (error) {
+      console.warn(
+        'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
+      );
+    }
+
     // Upload build if provided
-    let buildId: number | undefined;
-    if (buildPath) {
-      buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+    // let buildId: number | undefined;
+    // if (buildPath) {
+    //   buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+    // }
+
+    if (octokit && commentId) {
+      const commentText = 'Triggering test...';
+      await updateComment({ context, octokit, commentId, commentText });
     }
 
     // Trigger test run
@@ -116,7 +154,12 @@ const run = async (): Promise<void> => {
         body: JSON.stringify({
           testRunId: scheduledTestRunId,
           expoReleaseChannel,
-          buildId,
+          buildId: 9999,
+          commentId,
+          githubToken,
+          isPullRequest: Boolean(context.payload.pull_request),
+          owner: context.repo.owner,
+          repo: context.repo.repo,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -133,17 +176,7 @@ const run = async (): Promise<void> => {
 
     console.info('Successfully triggered a test run.');
 
-    if (!githubToken)
-      return console.warn(
-        'No github token provided, not creating a GitHub comment.'
-      );
-
-    try {
-      const octokit = new Octokit({
-        auth: githubToken,
-      });
-      const context = github.context;
-
+    if (octokit && commentId) {
       const {
         buildId,
         devices,
@@ -158,25 +191,7 @@ const run = async (): Promise<void> => {
         expoReleaseChannel: finalReleaseChannel,
         url,
       });
-      if (context.payload.pull_request) {
-        await octokit.issues.createComment({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          issue_number: context.payload.pull_request.number,
-          body: commentText,
-        });
-      } else {
-        await octokit.repos.createCommitComment({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          commit_sha: context.sha,
-          body: commentText,
-        });
-      }
-    } catch (error) {
-      console.warn(
-        'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
-      );
+      await updateComment({ context, octokit, commentId, commentText });
     }
   } catch (error) {
     if (typeof error === 'string') {
