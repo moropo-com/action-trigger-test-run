@@ -11256,6 +11256,8 @@ const fs_1 = __nccwpck_require__(7147);
 const promises_1 = __nccwpck_require__(3292);
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
 const path_1 = __importDefault(__nccwpck_require__(1017));
+const createComment_1 = __nccwpck_require__(1494);
+const updateComment_1 = __nccwpck_require__(6601);
 const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, }) => `
 ## Moropo Test Run
 
@@ -11309,10 +11311,38 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const buildPath = (0, core_1.getInput)('build_path');
         const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
         const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
+        let octokit = null;
+        let commentId = null;
+        const context = github.context;
+        try {
+            if (!githubToken) {
+                throw new Error('No github token provided, not creating a GitHub comment.');
+            }
+            octokit = new rest_1.Octokit({
+                auth: githubToken,
+            });
+            const commentText = 'Uploading Build..';
+            const { commentId: newCommentId, error } = yield (0, createComment_1.createComment)({
+                commentText,
+                context,
+                octokit,
+            });
+            if (error) {
+                throw new Error(error.toString());
+            }
+            commentId = newCommentId;
+        }
+        catch (error) {
+            console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
+        }
         // Upload build if provided
-        let buildId;
-        if (buildPath) {
-            buildId = (yield uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+        // let buildId: number | undefined;
+        // if (buildPath) {
+        //   buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+        // }
+        if (octokit && commentId) {
+            const commentText = 'Triggering test...';
+            yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoUrl}.netlify/functions/triggerTestRun`, {
@@ -11320,7 +11350,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             body: JSON.stringify({
                 testRunId: scheduledTestRunId,
                 expoReleaseChannel,
-                buildId,
+                buildId: 9999,
+                commentId,
+                githubToken,
+                isPullRequest: Boolean(context.payload.pull_request),
+                owner: context.repo.owner,
+                repo: context.repo.repo,
             }),
             headers: {
                 'Content-Type': 'application/json',
@@ -11333,13 +11368,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
         }
         console.info('Successfully triggered a test run.');
-        if (!githubToken)
-            return console.warn('No github token provided, not creating a GitHub comment.');
-        try {
-            const octokit = new rest_1.Octokit({
-                auth: githubToken,
-            });
-            const context = github.context;
+        if (octokit && commentId) {
             const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
             const commentText = buildMessageString({
                 buildId,
@@ -11348,25 +11377,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 expoReleaseChannel: finalReleaseChannel,
                 url,
             });
-            if (context.payload.pull_request) {
-                yield octokit.issues.createComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: context.payload.pull_request.number,
-                    body: commentText,
-                });
-            }
-            else {
-                yield octokit.repos.createCommitComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    commit_sha: context.sha,
-                    body: commentText,
-                });
-            }
-        }
-        catch (error) {
-            console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
+            yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
     }
     catch (error) {
@@ -11379,6 +11390,95 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
     }
 });
 run();
+
+
+/***/ }),
+
+/***/ 1494:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createComment = void 0;
+const createComment = ({ commentText, context, octokit, }) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let commentId;
+        if (context.payload.pull_request) {
+            const { data: { id }, } = yield octokit.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentText,
+            });
+            commentId = id;
+        }
+        else {
+            const { data: { id }, } = yield octokit.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                body: commentText,
+            });
+            commentId = id;
+        }
+        return { commentId, error: null };
+    }
+    catch (error) {
+        console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
+        return { commentId: null, error };
+    }
+});
+exports.createComment = createComment;
+
+
+/***/ }),
+
+/***/ 6601:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateComment = void 0;
+const updateComment = ({ context, octokit, commentId, commentText, }) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const updateArgs = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: commentId,
+            body: commentText,
+        };
+        if (context.payload.pull_request) {
+            yield octokit.issues.updateComment(updateArgs);
+        }
+        else {
+            yield octokit.repos.updateCommitComment(updateArgs);
+        }
+    }
+    catch (error) {
+        console.warn('Failed to update comment' + error.toString());
+    }
+});
+exports.updateComment = updateComment;
 
 
 /***/ }),
