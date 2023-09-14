@@ -136,10 +136,10 @@ const run = async (): Promise<void> => {
     }
 
     // Upload build if provided
-    let buildId: number | undefined;
-    if (buildPath) {
-      buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
-    }
+    // let buildId: number | undefined;
+    // if (buildPath) {
+    //   buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+    // }
 
     if (octokit && commentId) {
       const commentText = 'Triggering test...';
@@ -154,7 +154,7 @@ const run = async (): Promise<void> => {
         body: JSON.stringify({
           testRunId: scheduledTestRunId,
           expoReleaseChannel,
-          buildId,
+          buildId: 9999,
           commentId,
           githubToken,
           isPullRequest: Boolean(context.payload.pull_request),
