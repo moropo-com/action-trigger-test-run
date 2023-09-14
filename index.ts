@@ -156,8 +156,10 @@ const run = async (): Promise<void> => {
           expoReleaseChannel,
           buildId,
           commentId,
-          context,
           githubToken,
+          isPullRequest: Boolean(context.payload.pull_request),
+          owner: context.repo.owner,
+          repo: context.repo.repo,
         }),
         headers: {
           'Content-Type': 'application/json',
