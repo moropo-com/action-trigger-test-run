@@ -94,6 +94,10 @@ const run = async (): Promise<void> => {
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
     }
 
+    const {
+      testRunInfo: { id: testRunId },
+    } = triggerTestBody;
+
     console.info('Successfully triggered a test run.');
 
     if (octokit && commentId) {
@@ -123,12 +127,7 @@ const run = async (): Promise<void> => {
       });
     }
 
-    sync &&
-      new StatusPoller(
-        moropoUrl,
-        Number(scheduledTestRunId),
-        apiKey
-      ).startPolling();
+    sync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
   } catch (error) {
     if (typeof error === 'string') {
       setFailed(error);

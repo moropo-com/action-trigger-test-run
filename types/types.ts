@@ -15,6 +15,7 @@ export interface IPollTestRunStatusResponse {
 export interface ITriggerTestRunResponse {
   message: string;
   testRunInfo: {
+    id: number;
     buildId: string;
     devices: string[];
     tests: string[];
