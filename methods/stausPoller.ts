@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import { IPollArgs, IPollTestRunStatusResponse } from '../types/types';
+import fetch from 'node-fetch';
 
 const WAIT_TIMEOUT_MS = 1000 * 60 * 30; // 30 minutes
 const INTERVAL_MS = 30000; // 30 seconds
@@ -21,7 +22,7 @@ export default class StatusPoller {
   async poll({ sleep, prevErrorCount = 0 }: IPollArgs) {
     try {
       const pollTestRun = await fetch(
-        `${this.moropoUrl}.netlify/functions/pollTestRunState`,
+        `${this.moropoUrl}.netlify/functions/pollTestRunStatus`,
         {
           method: 'POST',
           body: JSON.stringify({
