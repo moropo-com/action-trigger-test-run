@@ -1,93 +1,13 @@
 import { getInput, setFailed } from '@actions/core';
 import * as github from '@actions/github';
 import { Octokit } from '@octokit/rest';
-import FormData from 'form-data';
-import { existsSync } from 'fs';
-import { readFile } from 'fs/promises';
 import fetch from 'node-fetch';
-import path from 'path';
-
-interface IMessageData {
-  buildId: string;
-  devices: string;
-  tests: string;
-  expoReleaseChannel: string;
-  url: string;
-}
-
-interface ITriggerTestRunResponse {
-  message: string;
-  testRunInfo: {
-    buildId: string;
-    devices: string[];
-    tests: string[];
-    expoReleaseChannel: string;
-    url: string;
-  };
-}
-
-interface IBuildUploadResponse {
-  message?: string;
-  buildId?: number;
-}
-
-const buildMessageString = ({
-  buildId,
-  devices,
-  tests,
-  expoReleaseChannel,
-  url,
-}: IMessageData) => `
-## Moropo Test Run
-
-### Summary
-
-**Build:** ${buildId}
-
-**Release Channel:** ${expoReleaseChannel}
-
-| **Device(s):**       | **Test(s):**        |
-| -------------------- | ------------------- |
-| ${devices} | ${tests} |
-
-[View Results](${url})
-`;
-
-const uploadBuild = async (
-  url: URL,
-  apiKey: string,
-  buildPath: string
-): Promise<IBuildUploadResponse> => {
-  if (!existsSync(buildPath)) {
-    throw new Error('Build file not found');
-  }
-
-  const fileName = path.basename(buildPath);
-  const fileData = await readFile(buildPath);
-  const formData = new FormData();
-  formData.append('file', fileData, {
-    filename: fileName,
-    filepath: buildPath,
-  });
-
-  const buildUpload = await fetch(`${url}apps/builds`, {
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-App-Api-Key': apiKey,
-      'User-Agent': 'moropo-github-action',
-    },
-  });
-
-  const responseJson = await buildUpload.json();
-
-  if (!buildUpload.ok) {
-    throw new Error(`Failed to upload build: ${JSON.stringify(responseJson)}`);
-  }
-  console.info('Successfully uploaded build.');
-
-  return responseJson;
-};
+import { createComment } from './methods/createComment';
+import { updateComment } from './methods/updateComment';
+import { ITriggerTestRunResponse } from './types/types';
+import { uploadBuild } from './methods/uploadBuild';
+import { buildMessageString } from './methods/buildMessageString';
+import StatusPoller from './methods/stausPoller';
 
 const run = async (): Promise<void> => {
   try {
@@ -101,11 +21,49 @@ const run = async (): Promise<void> => {
     const buildPath = getInput('build_path');
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
+    const githubPersonalAccessToken = new URL(getInput('github_access_token'));
+    const sync = new URL(getInput('sync'));
+
+    let octokit: Octokit | null = null;
+    let commentId: number | null = null;
+    const context = github.context;
+
+    try {
+      if (!githubToken && !githubPersonalAccessToken) {
+        throw new Error(
+          'No github token provided, not creating a GitHub comment.'
+        );
+      }
+      octokit = new Octokit({
+        auth: githubPersonalAccessToken ?? githubToken,
+      });
+
+      const commentText = 'Uploading Build..';
+
+      const { commentId: newCommentId, error } = await createComment({
+        commentText,
+        context,
+        octokit,
+      });
+      if (error) {
+        throw new Error(error.toString());
+      }
+      commentId = newCommentId;
+    } catch (error) {
+      console.warn(
+        'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
+      );
+    }
 
     // Upload build if provided
     let buildId: number | undefined;
     if (buildPath) {
       buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
+    }
+
+    if (octokit && commentId) {
+      const commentText = 'Triggering test...';
+      await updateComment({ context, octokit, commentId, commentText });
     }
 
     // Trigger test run
@@ -117,6 +75,11 @@ const run = async (): Promise<void> => {
           testRunId: scheduledTestRunId,
           expoReleaseChannel,
           buildId,
+          commentId,
+          githubToken,
+          isPullRequest: Boolean(context.payload.pull_request),
+          owner: context.repo.owner,
+          repo: context.repo.repo,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -131,19 +94,13 @@ const run = async (): Promise<void> => {
       throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
     }
 
+    const {
+      testRunInfo: { id: testRunId },
+    } = triggerTestBody;
+
     console.info('Successfully triggered a test run.');
 
-    if (!githubToken)
-      return console.warn(
-        'No github token provided, not creating a GitHub comment.'
-      );
-
-    try {
-      const octokit = new Octokit({
-        auth: githubToken,
-      });
-      const context = github.context;
-
+    if (octokit && commentId) {
       const {
         buildId,
         devices,
@@ -158,26 +115,19 @@ const run = async (): Promise<void> => {
         expoReleaseChannel: finalReleaseChannel,
         url,
       });
-      if (context.payload.pull_request) {
-        await octokit.issues.createComment({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          issue_number: context.payload.pull_request.number,
-          body: commentText,
-        });
-      } else {
-        await octokit.repos.createCommitComment({
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-          commit_sha: context.sha,
-          body: commentText,
-        });
-      }
-    } catch (error) {
-      console.warn(
-        'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
-      );
+      await updateComment({ context, octokit, commentId, commentText });
     }
+
+    if (!sync && !githubPersonalAccessToken && octokit) {
+      await createComment({
+        commentText:
+          'Unable to update test status any further, please include a Github token or sync argument',
+        context,
+        octokit,
+      });
+    }
+
+    sync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
   } catch (error) {
     if (typeof error === 'string') {
       setFailed(error);
