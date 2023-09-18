@@ -11251,11 +11251,125 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core_1 = __nccwpck_require__(2186);
 const github = __importStar(__nccwpck_require__(5438));
 const rest_1 = __nccwpck_require__(5375);
-const form_data_1 = __importDefault(__nccwpck_require__(4334));
-const fs_1 = __nccwpck_require__(7147);
-const promises_1 = __nccwpck_require__(3292);
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
-const path_1 = __importDefault(__nccwpck_require__(1017));
+const createComment_1 = __nccwpck_require__(1494);
+const updateComment_1 = __nccwpck_require__(6601);
+const uploadBuild_1 = __nccwpck_require__(8756);
+const buildMessageString_1 = __nccwpck_require__(5655);
+const stausPoller_1 = __importDefault(__nccwpck_require__(8622));
+const run = () => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let expoReleaseChannel = (0, core_1.getInput)('expo_release_channel');
+        if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
+            expoReleaseChannel = null;
+        }
+        const scheduledTestRunId = (0, core_1.getInput)('scheduled_test_id');
+        const apiKey = (0, core_1.getInput)('api_key');
+        const githubToken = (0, core_1.getInput)('github_token');
+        const buildPath = (0, core_1.getInput)('build_path');
+        const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
+        const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
+        const githubPersonalAccessToken = new URL((0, core_1.getInput)('github_access_token'));
+        const sync = new URL((0, core_1.getInput)('sync'));
+        let octokit = null;
+        let commentId = null;
+        const context = github.context;
+        try {
+            if (!githubToken && !githubPersonalAccessToken) {
+                throw new Error('No github token provided, not creating a GitHub comment.');
+            }
+            octokit = new rest_1.Octokit({
+                auth: githubPersonalAccessToken !== null && githubPersonalAccessToken !== void 0 ? githubPersonalAccessToken : githubToken,
+            });
+            const commentText = 'Uploading Build..';
+            const { commentId: newCommentId, error } = yield (0, createComment_1.createComment)({
+                commentText,
+                context,
+                octokit,
+            });
+            if (error) {
+                throw new Error(error.toString());
+            }
+            commentId = newCommentId;
+        }
+        catch (error) {
+            console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
+        }
+        // Upload build if provided
+        let buildId;
+        if (buildPath) {
+            buildId = (yield (0, uploadBuild_1.uploadBuild)(moropoApiUrl, apiKey, buildPath)).buildId;
+        }
+        if (octokit && commentId) {
+            const commentText = 'Triggering test...';
+            yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
+        }
+        // Trigger test run
+        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoUrl}.netlify/functions/triggerTestRun`, {
+            method: 'POST',
+            body: JSON.stringify({
+                testRunId: scheduledTestRunId,
+                expoReleaseChannel,
+                buildId,
+                commentId,
+                githubToken,
+                isPullRequest: Boolean(context.payload.pull_request),
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+            }),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-moropo-api-key': apiKey,
+                'User-Agent': 'moropo-github-action',
+            },
+        });
+        const triggerTestBody = yield triggerTestRun.json();
+        if (!triggerTestRun.ok) {
+            throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
+        }
+        const { testRunInfo: { id: testRunId }, } = triggerTestBody;
+        console.info('Successfully triggered a test run.');
+        if (octokit && commentId) {
+            const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
+            const commentText = (0, buildMessageString_1.buildMessageString)({
+                buildId,
+                devices: devices.join('<br>'),
+                tests: tests.join('<br>'),
+                expoReleaseChannel: finalReleaseChannel,
+                url,
+            });
+            yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
+        }
+        if (!sync && !githubPersonalAccessToken && octokit) {
+            yield (0, createComment_1.createComment)({
+                commentText: 'Unable to update test status any further, please include a Github token or sync argument',
+                context,
+                octokit,
+            });
+        }
+        sync && new stausPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
+    }
+    catch (error) {
+        if (typeof error === 'string') {
+            (0, core_1.setFailed)(error);
+        }
+        else {
+            (0, core_1.setFailed)(error.message);
+        }
+    }
+});
+run();
+
+
+/***/ }),
+
+/***/ 5655:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildMessageString = void 0;
 const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, }) => `
 ## Moropo Test Run
 
@@ -11271,6 +11385,240 @@ const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, 
 
 [View Results](${url})
 `;
+exports.buildMessageString = buildMessageString;
+
+
+/***/ }),
+
+/***/ 1494:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createComment = void 0;
+const createComment = ({ commentText, context, octokit, }) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        let commentId;
+        if (context.payload.pull_request) {
+            const { data: { id }, } = yield octokit.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: commentText,
+            });
+            commentId = id;
+        }
+        else {
+            const { data: { id }, } = yield octokit.repos.createCommitComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha,
+                body: commentText,
+            });
+            commentId = id;
+        }
+        return { commentId, error: null };
+    }
+    catch (error) {
+        console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
+        return { commentId: null, error };
+    }
+});
+exports.createComment = createComment;
+
+
+/***/ }),
+
+/***/ 8622:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core = __importStar(__nccwpck_require__(2186));
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const WAIT_TIMEOUT_MS = 1000 * 60 * 30; // 30 minutes
+const INTERVAL_MS = 30000; // 30 seconds
+class StatusPoller {
+    constructor(moropoUrl, testRunId, apiKey) {
+        this.moropoUrl = moropoUrl;
+        this.testRunId = testRunId;
+        this.apiKey = apiKey;
+        this.completedFlows = {};
+    }
+    markFailed(msg) {
+        core.setFailed(msg);
+    }
+    poll({ sleep, prevErrorCount = 0 }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const pollTestRun = yield (0, node_fetch_1.default)(`${this.moropoUrl}.netlify/functions/pollTestRunStatus`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        testRunId: this.testRunId,
+                    }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-moropo-api-key': this.apiKey,
+                        'User-Agent': 'moropo-github-action',
+                    },
+                });
+                const pollTestRunBody = yield pollTestRun.json();
+                const { complete, passed, message } = pollTestRunBody;
+                if (complete) {
+                    this.teardown();
+                    if (!passed) {
+                        this.markFailed(message);
+                    }
+                }
+                else {
+                    setTimeout(() => this.poll({ sleep }), sleep);
+                }
+            }
+            catch (error) {
+                const newSleep = sleep * 1.25;
+                if (prevErrorCount < 3) {
+                    setTimeout(() => this.poll({
+                        sleep: newSleep,
+                        prevErrorCount: prevErrorCount + 1,
+                    }), newSleep);
+                }
+                else {
+                    this.markFailed(error.toString());
+                }
+            }
+        });
+    }
+    registerTimeout() {
+        this.timeout = setTimeout(() => { }, WAIT_TIMEOUT_MS);
+    }
+    teardown() {
+        this.timeout && clearTimeout(this.timeout);
+    }
+    startPolling() {
+        try {
+            this.poll({ sleep: INTERVAL_MS });
+        }
+        catch (err) {
+            this.markFailed(err instanceof Error ? err.message : `${err} `);
+        }
+        this.registerTimeout();
+    }
+}
+exports["default"] = StatusPoller;
+
+
+/***/ }),
+
+/***/ 6601:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.updateComment = void 0;
+const updateComment = ({ context, octokit, commentId, commentText, }) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const updateArgs = {
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            comment_id: commentId,
+            body: commentText,
+        };
+        if (context.payload.pull_request) {
+            yield octokit.issues.updateComment(updateArgs);
+        }
+        else {
+            yield octokit.repos.updateCommitComment(updateArgs);
+        }
+    }
+    catch (error) {
+        console.warn('Failed to update comment' + error.toString());
+    }
+});
+exports.updateComment = updateComment;
+
+
+/***/ }),
+
+/***/ 8756:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.uploadBuild = void 0;
+const form_data_1 = __importDefault(__nccwpck_require__(4334));
+const fs_1 = __nccwpck_require__(7147);
+const promises_1 = __nccwpck_require__(3292);
+const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const path_1 = __importDefault(__nccwpck_require__(1017));
 const uploadBuild = (url, apiKey, buildPath) => __awaiter(void 0, void 0, void 0, function* () {
     if (!(0, fs_1.existsSync)(buildPath)) {
         throw new Error('Build file not found');
@@ -11297,88 +11645,7 @@ const uploadBuild = (url, apiKey, buildPath) => __awaiter(void 0, void 0, void 0
     console.info('Successfully uploaded build.');
     return responseJson;
 });
-const run = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        let expoReleaseChannel = (0, core_1.getInput)('expo_release_channel');
-        if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
-            expoReleaseChannel = null;
-        }
-        const scheduledTestRunId = (0, core_1.getInput)('scheduled_test_id');
-        const apiKey = (0, core_1.getInput)('api_key');
-        const githubToken = (0, core_1.getInput)('github_token');
-        const buildPath = (0, core_1.getInput)('build_path');
-        const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
-        const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
-        // Upload build if provided
-        let buildId;
-        if (buildPath) {
-            buildId = (yield uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
-        }
-        // Trigger test run
-        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoUrl}.netlify/functions/triggerTestRun`, {
-            method: 'POST',
-            body: JSON.stringify({
-                testRunId: scheduledTestRunId,
-                expoReleaseChannel,
-                buildId,
-            }),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-moropo-api-key': apiKey,
-                'User-Agent': 'moropo-github-action',
-            },
-        });
-        const triggerTestBody = yield triggerTestRun.json();
-        if (!triggerTestRun.ok) {
-            throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
-        }
-        console.info('Successfully triggered a test run.');
-        if (!githubToken)
-            return console.warn('No github token provided, not creating a GitHub comment.');
-        try {
-            const octokit = new rest_1.Octokit({
-                auth: githubToken,
-            });
-            const context = github.context;
-            const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
-            const commentText = buildMessageString({
-                buildId,
-                devices: devices.join('<br>'),
-                tests: tests.join('<br>'),
-                expoReleaseChannel: finalReleaseChannel,
-                url,
-            });
-            if (context.payload.pull_request) {
-                yield octokit.issues.createComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    issue_number: context.payload.pull_request.number,
-                    body: commentText,
-                });
-            }
-            else {
-                yield octokit.repos.createCommitComment({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    commit_sha: context.sha,
-                    body: commentText,
-                });
-            }
-        }
-        catch (error) {
-            console.warn('Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.');
-        }
-    }
-    catch (error) {
-        if (typeof error === 'string') {
-            (0, core_1.setFailed)(error);
-        }
-        else {
-            (0, core_1.setFailed)(error.message);
-        }
-    }
-});
-run();
+exports.uploadBuild = uploadBuild;
 
 
 /***/ }),
