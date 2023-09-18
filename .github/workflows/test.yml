@@ -16,4 +16,4 @@ jobs:
           build_path: builds/android.apk
           moropo_url: https://dev.moropo.com/
           sync: true
-          moropo_api_url: 'http://api.dev.moropo.com/'
+          moropo_api_url: 'https://api.dev.moropo.com/'
