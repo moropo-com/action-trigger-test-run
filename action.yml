@@ -24,6 +24,12 @@ inputs:
   moropo_api_url:
     description: 'For development purposes only - choose a different moropo API URL'
     default: 'https://api.moropo.com'
+  github_access_token:
+    description: 'Optional personal Github Access Token, enables updates to comments and check status asynchronously'
+    required: false
+  sync:
+    description: 'Enables the action to run synchronously, allows comments and checks to be updated without a Github PAT'
+    default: false
 
 runs:
   using: 'node16'

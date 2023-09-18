@@ -21,8 +21,8 @@ const run = async (): Promise<void> => {
     const buildPath = getInput('build_path');
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
-    const githubPersonalAccessToken = new URL(getInput('github_access_token'));
-    const sync = new URL(getInput('sync'));
+    const githubPersonalAccessToken = getInput('github_access_token');
+    const sync = getInput('sync');
 
     let octokit: Octokit | null = null;
     let commentId: number | null = null;
