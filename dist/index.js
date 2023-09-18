@@ -11269,8 +11269,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const buildPath = (0, core_1.getInput)('build_path');
         const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
         const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
-        const githubPersonalAccessToken = new URL((0, core_1.getInput)('github_access_token'));
-        const sync = new URL((0, core_1.getInput)('sync'));
+        const githubPersonalAccessToken = (0, core_1.getInput)('github_access_token');
+        const sync = (0, core_1.getInput)('sync');
         let octokit = null;
         let commentId = null;
         const context = github.context;
