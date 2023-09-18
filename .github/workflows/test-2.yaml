@@ -1,0 +1,19 @@
+name: Moropo Test Run
+on: pull_request
+permissions:
+  pull-requests: write
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run Moropo Tests
+        uses: ./
+        with:
+          scheduled_test_id: 9df3eed1-d3c8-4fb8-8365-e3ed2f05d406
+          api_key: a2dee5c8-36d8-463d-aa5b-f76137f90bc7
+          build_path: builds/android.apk
+          moropo_url: https://dev.moropo.com/
+          sync: true
+          moropo_api_url: 'https://api.dev.moropo.com/'
