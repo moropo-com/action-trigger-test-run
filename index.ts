@@ -120,7 +120,7 @@ const run = async (): Promise<void> => {
     if (!sync && octokit) {
       await createComment({
         commentText:
-          'Unable to update check status any further, please include a Github PAT and sync argument',
+          'Unable to update check status any further, please include a Github PAT or sync argument',
         context,
         octokit,
       });
