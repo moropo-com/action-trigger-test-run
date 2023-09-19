@@ -21,7 +21,6 @@ const run = async (): Promise<void> => {
     const buildPath = getInput('build_path');
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
-    const githubPersonalAccessToken = getInput('github_access_token');
     const sync = getInput('sync');
 
     let octokit: Octokit | null = null;
@@ -29,13 +28,13 @@ const run = async (): Promise<void> => {
     const context = github.context;
 
     try {
-      if (!githubToken && !githubPersonalAccessToken) {
+      if (!githubToken) {
         throw new Error(
           'No github token provided, not creating a GitHub comment.'
         );
       }
       octokit = new Octokit({
-        auth: githubPersonalAccessToken ?? githubToken,
+        auth: githubToken,
       });
 
       const commentText = 'Uploading Build..';
@@ -118,10 +117,10 @@ const run = async (): Promise<void> => {
       await updateComment({ context, octokit, commentId, commentText });
     }
 
-    if (!sync && !githubPersonalAccessToken && octokit) {
+    if (!sync && octokit) {
       await createComment({
         commentText:
-          'Unable to update test status any further, please include a Github token or sync argument',
+          'Unable to update check status any further, please include a Github PAT and sync argument',
         context,
         octokit,
       });
