@@ -11252,11 +11252,11 @@ const core_1 = __nccwpck_require__(2186);
 const github = __importStar(__nccwpck_require__(5438));
 const rest_1 = __nccwpck_require__(5375);
 const node_fetch_1 = __importDefault(__nccwpck_require__(467));
+const buildMessageString_1 = __nccwpck_require__(5655);
 const createComment_1 = __nccwpck_require__(1494);
+const statusPoller_1 = __importDefault(__nccwpck_require__(6117));
 const updateComment_1 = __nccwpck_require__(6601);
 const uploadBuild_1 = __nccwpck_require__(8756);
-const buildMessageString_1 = __nccwpck_require__(5655);
-const stausPoller_1 = __importDefault(__nccwpck_require__(8622));
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         let expoReleaseChannel = (0, core_1.getInput)('expo_release_channel');
@@ -11346,7 +11346,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 octokit,
             });
         }
-        sync && new stausPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
+        sync && new statusPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
     }
     catch (error) {
         if (typeof error === 'string') {
@@ -11438,7 +11438,7 @@ exports.createComment = createComment;
 
 /***/ }),
 
-/***/ 8622:
+/***/ 6117:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";

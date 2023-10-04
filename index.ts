@@ -2,12 +2,12 @@ import { getInput, setFailed } from '@actions/core';
 import * as github from '@actions/github';
 import { Octokit } from '@octokit/rest';
 import fetch from 'node-fetch';
-import { createComment } from './methods/createComment';
-import { updateComment } from './methods/updateComment';
-import { ITriggerTestRunResponse } from './types/types';
-import { uploadBuild } from './methods/uploadBuild';
 import { buildMessageString } from './methods/buildMessageString';
-import StatusPoller from './methods/stausPoller';
+import { createComment } from './methods/createComment';
+import StatusPoller from './methods/statusPoller';
+import { updateComment } from './methods/updateComment';
+import { uploadBuild } from './methods/uploadBuild';
+import { ITriggerTestRunResponse } from './types/types';
 
 const run = async (): Promise<void> => {
   try {
