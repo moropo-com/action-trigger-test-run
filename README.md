@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Moropo - Trigger Mobile App Test Run
-        uses: moropo-com/action-trigger-test-run@v1
+        uses: moropo-com/action-trigger-test-run@v2
         with:
           api_key: ${{ secrets.MOROPO_API_KEY }}
 
@@ -49,7 +49,7 @@ It follows the UUID schema, e.g.
 
 ```yaml
 - name: Moropo - Trigger Mobile App Test Run
-  uses: moropo-com/action-trigger-test-run@v1
+  uses: moropo-com/action-trigger-test-run@v2
   with:
     scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
 ```
@@ -61,7 +61,7 @@ It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however
 
 ```yaml
 - name: Moropo - Trigger Mobile App Test Run
-  uses: moropo-com/action-trigger-test-run@v1
+  uses: moropo-com/action-trigger-test-run@v2
   with:
     scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
     api_key: ${{ secrets.MOROPO_API_KEY }}
@@ -74,7 +74,7 @@ It follows the regular Expo release channel schema, e.g.
 
 ```yaml
 - name: Moropo - Trigger Mobile App Test Run
-  uses: moropo-com/action-trigger-test-run@v1
+  uses: moropo-com/action-trigger-test-run@v2
   with:
     scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
     expo_release_channel: https://u.expo.dev/5b2c7f8a-9d34-4c1e-8a5f-3d9e7b0c2f12?channel-name=moropo-410&runtime-version=exposdk:47.0.0&platform=android
@@ -86,7 +86,7 @@ It follows the regular Expo release channel schema, e.g.
 
 ```yaml
 - name: Moropo - Trigger Mobile App Test Run
-  uses: moropo-com/action-trigger-test-run@v1
+  uses: moropo-com/action-trigger-test-run@v2
   with:
     build_path: /path/to/your_app.apk # This can also be an app.zip for iOS.
 ```
