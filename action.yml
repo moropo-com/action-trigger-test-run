@@ -29,7 +29,7 @@ inputs:
     default: false
 
 runs:
-  using: 'node16'
+  using: 'node18'
   main: 'dist/index.js'
 branding:
   icon: 'check'
