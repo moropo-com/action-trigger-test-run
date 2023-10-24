@@ -1,4 +1,5 @@
-name: Move Major Release Tag
+name: Update major release tag
+run-name: Update major release tag for ${{ github.ref }}
 
 on:
   workflow_dispatch:
@@ -10,12 +11,19 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Get major version num and update tag
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git Credentials
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Update tag to major version
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           MAJOR=${VERSION%%.*}
-          git config --local user.email "admin@moropo.com"
-          git config --local user.name "Moropo"
-          git tag -fa ${MAJOR} -m "Update major version tag"
+          git tag -fa ${MAJOR} -m "[CI] Move major release tag"
           git push origin ${MAJOR} --force

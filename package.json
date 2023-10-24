@@ -1,13 +1,16 @@
 {
   "name": "moropo-github-action",
-  "version": "1.0.0",
   "description": "Moropo - Trigger Mobile App Test Run",
-  "main": "index.ts",
+  "author": "Moropo",
+  "version": "1.0.0",
+  "main": "src/index.ts",
   "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "build": "ncc build"
   },
-  "author": "",
   "dependencies": {
     "@actions/core": "^1.5.0",
     "@actions/github": "^5.0.0",
