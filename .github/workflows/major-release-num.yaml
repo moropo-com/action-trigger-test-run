@@ -24,5 +24,8 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           MAJOR=${VERSION%%.*}
+
+          echo "Updating tag ${MAJOR} (source: ${VERSION}) to ${GITHUB_SHA}"
+
           git tag -f ${MAJOR}
           git push origin ${MAJOR} --force
