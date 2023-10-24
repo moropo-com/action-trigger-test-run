@@ -25,5 +25,5 @@ jobs:
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
           MAJOR=${VERSION%%.*}
-          git tag -f ${MAJOR} -m "[CI] Move major release tag"
+          git tag -f ${MAJOR}
           git push origin ${MAJOR} --force
