@@ -22,7 +22,7 @@ jobs:
 
       - name: Update tag to major version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION=${{ github.ref_name }}
           MAJOR=${VERSION%%.*}
 
           echo "Updating tag ${MAJOR} (source: ${VERSION}) to ${GITHUB_SHA}"
