@@ -15,7 +15,7 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    const scheduledTestRunId = getInput('scheduled_test_id');
+    const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
     const buildPath = getInput('build_path');
@@ -69,7 +69,7 @@ const run = async (): Promise<void> => {
     const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
       method: 'POST',
       body: JSON.stringify({
-        testRunId: scheduledTestRunId,
+        ciCdId,
         expoReleaseChannel,
         buildId,
         commentId,
