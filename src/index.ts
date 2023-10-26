@@ -15,7 +15,7 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    const scheduledTestRunId = getInput('scheduled_test_id');
+    const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
     const buildPath = getInput('build_path');
@@ -66,27 +66,25 @@ const run = async (): Promise<void> => {
     }
 
     // Trigger test run
-    const triggerTestRun = await fetch(
-      `${moropoUrl}.netlify/functions/triggerTestRun`,
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          testRunId: scheduledTestRunId,
-          expoReleaseChannel,
-          buildId,
-          commentId,
-          githubToken,
-          isPullRequest: Boolean(context.payload.pull_request),
-          owner: context.repo.owner,
-          repo: context.repo.repo,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-          'x-moropo-api-key': apiKey,
-          'User-Agent': 'moropo-github-action',
-        },
-      }
-    );
+    const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
+      method: 'POST',
+      body: JSON.stringify({
+        ciCdId,
+        expoReleaseChannel,
+        buildId,
+        commentId,
+        githubToken,
+        isPullRequest: Boolean(context.payload.pull_request),
+        owner: context.repo.owner,
+        repo: context.repo.repo,
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-App-Api-Key': apiKey,
+        'User-Agent': 'moropo-github-action',
+      },
+    });
+
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
     if (!triggerTestRun.ok) {
@@ -117,7 +115,9 @@ const run = async (): Promise<void> => {
       await updateComment({ context, octokit, commentId, commentText });
     }
 
-    if (!sync && octokit) {
+    const isSync = sync === 'true';
+
+    if (!isSync && octokit) {
       await createComment({
         commentText:
           'Unable to update check status any further, please include a Github PAT or sync argument',
@@ -126,7 +126,7 @@ const run = async (): Promise<void> => {
       });
     }
 
-    sync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
+    isSync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
   } catch (error) {
     if (typeof error === 'string') {
       setFailed(error);
