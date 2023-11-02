@@ -27,6 +27,9 @@ inputs:
   sync:
     description: 'Enables the action to run synchronously, allows comments and checks to be updated without a Github PAT'
     default: false
+  test_env_variables:
+    description: 'Env variables to be passed into the tests, must be in stringified JSON format (e.g. "{ "key": "value" }").'
+    required: false
 
 runs:
   using: 'node20'

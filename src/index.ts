@@ -15,6 +15,10 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
+    let testEnvVariableString: string | null = getInput('test_env_variables');
+    if (!testEnvVariableString?.length) {
+      testEnvVariableString = null;
+    }
     const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
@@ -22,6 +26,7 @@ const run = async (): Promise<void> => {
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
     const sync = getInput('sync');
+    let testEnvVariables: { [key: string]: string } | null = null;
 
     let octokit: Octokit | null = null;
     let commentId: number | null = null;
@@ -36,6 +41,16 @@ const run = async (): Promise<void> => {
       octokit = new Octokit({
         auth: githubToken,
       });
+
+      if (testEnvVariableString) {
+        try {
+          testEnvVariables = JSON.parse(testEnvVariableString);
+        } catch (e) {
+          throw new Error(
+            'Unable to parse test env variables, please check formatting.'
+          );
+        }
+      }
 
       const commentText = 'Uploading Build..';
 
@@ -77,6 +92,7 @@ const run = async (): Promise<void> => {
         isPullRequest: Boolean(context.payload.pull_request),
         owner: context.repo.owner,
         repo: context.repo.repo,
+        testEnvVariables,
       }),
       headers: {
         'Content-Type': 'application/json',
