@@ -15,9 +15,9 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    let testEnvVariableString: string | null = getInput('test_env_variables');
-    if (!testEnvVariableString?.length) {
-      testEnvVariableString = null;
+    let testEnvVariables: string | null = getInput('test_env_variables');
+    if (!testEnvVariables?.length) {
+      testEnvVariables = null;
     }
     const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
@@ -26,7 +26,6 @@ const run = async (): Promise<void> => {
     const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
     const sync = getInput('sync');
-    let testEnvVariables: { [key: string]: string } | null = null;
 
     let octokit: Octokit | null = null;
     let commentId: number | null = null;
@@ -42,9 +41,9 @@ const run = async (): Promise<void> => {
         auth: githubToken,
       });
 
-      if (testEnvVariableString) {
+      if (testEnvVariables) {
         try {
-          testEnvVariables = JSON.parse(testEnvVariableString);
+          JSON.parse(testEnvVariables);
         } catch (e) {
           throw new Error(
             'Unable to parse test env variables, please check formatting.'
