@@ -15,6 +15,10 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
+    let testEnvVariables: string | null = getInput('test_env_variables');
+    if (!testEnvVariables?.length) {
+      testEnvVariables = null;
+    }
     const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
@@ -36,6 +40,16 @@ const run = async (): Promise<void> => {
       octokit = new Octokit({
         auth: githubToken,
       });
+
+      if (testEnvVariables) {
+        try {
+          JSON.parse(testEnvVariables);
+        } catch (e) {
+          throw new Error(
+            'Unable to parse test env variables, please check formatting.'
+          );
+        }
+      }
 
       const commentText = 'Uploading Build..';
 
@@ -77,6 +91,7 @@ const run = async (): Promise<void> => {
         isPullRequest: Boolean(context.payload.pull_request),
         owner: context.repo.owner,
         repo: context.repo.repo,
+        testEnvVariables,
       }),
       headers: {
         'Content-Type': 'application/json',
