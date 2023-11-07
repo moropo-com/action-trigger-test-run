@@ -34144,7 +34144,11 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
             expoReleaseChannel = null;
         }
-        const scheduledTestRunId = (0, core_1.getInput)('scheduled_test_id');
+        let testEnvVariables = (0, core_1.getInput)('test_env_variables');
+        if (!(testEnvVariables === null || testEnvVariables === void 0 ? void 0 : testEnvVariables.length)) {
+            testEnvVariables = null;
+        }
+        const ciCdId = (0, core_1.getInput)('scheduled_test_id');
         const apiKey = (0, core_1.getInput)('api_key');
         const githubToken = (0, core_1.getInput)('github_token');
         const buildPath = (0, core_1.getInput)('build_path');
@@ -34161,6 +34165,14 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             octokit = new rest_1.Octokit({
                 auth: githubToken,
             });
+            if (testEnvVariables) {
+                try {
+                    JSON.parse(testEnvVariables);
+                }
+                catch (e) {
+                    throw new Error('Unable to parse test env variables, please check formatting.');
+                }
+            }
             const commentText = 'Uploading Build..';
             const { commentId: newCommentId, error } = yield (0, createComment_1.createComment)({
                 commentText,
@@ -34185,10 +34197,10 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
         // Trigger test run
-        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoUrl}.netlify/functions/triggerTestRun`, {
+        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
             body: JSON.stringify({
-                testRunId: scheduledTestRunId,
+                ciCdId,
                 expoReleaseChannel,
                 buildId,
                 commentId,
@@ -34196,10 +34208,11 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 isPullRequest: Boolean(context.payload.pull_request),
                 owner: context.repo.owner,
                 repo: context.repo.repo,
+                testEnvVariables,
             }),
             headers: {
                 'Content-Type': 'application/json',
-                'x-moropo-api-key': apiKey,
+                'X-App-Api-Key': apiKey,
                 'User-Agent': 'moropo-github-action',
             },
         });
@@ -34220,14 +34233,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             });
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
-        if (!sync && octokit) {
+        const isSync = sync === 'true';
+        if (!isSync && octokit) {
             yield (0, createComment_1.createComment)({
                 commentText: 'Unable to update check status any further, please include a Github PAT or sync argument',
                 context,
                 octokit,
             });
         }
-        sync && new statusPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
+        isSync && new statusPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
     }
     catch (error) {
         if (typeof error === 'string') {
