@@ -34139,6 +34139,7 @@ const statusPoller_1 = __importDefault(__nccwpck_require__(3458));
 const updateComment_1 = __nccwpck_require__(461);
 const uploadBuild_1 = __nccwpck_require__(4608);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
         let expoReleaseChannel = (0, core_1.getInput)('expo_release_channel');
         if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
@@ -34218,12 +34219,13 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         const triggerTestBody = yield triggerTestRun.json();
         if (!triggerTestRun.ok) {
-            throw new Error(`Failed to schedule a test: ${triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.message}`);
+            throw new Error(`Failed to schedule a test`);
         }
-        const { testRunInfo: { id: testRunId }, } = triggerTestBody;
+        const triggerTestRunResponseBody = JSON.parse(triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.body);
+        const testRunId = (_a = triggerTestRunResponseBody.testRunInfo) === null || _a === void 0 ? void 0 : _a.id;
         console.info('Successfully triggered a test run.');
         if (octokit && commentId) {
-            const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.testRunInfo;
+            const { buildId, devices, tests, expoReleaseChannel: finalReleaseChannel, url, } = triggerTestRunResponseBody.testRunInfo;
             const commentText = (0, buildMessageString_1.buildMessageString)({
                 buildId,
                 devices: devices.join('<br>'),
