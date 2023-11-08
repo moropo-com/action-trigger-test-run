@@ -12,7 +12,7 @@ export interface IPollTestRunStatusResponse {
   complete: boolean;
 }
 
-export interface ITriggerTestRunResponse {
+export interface ITriggerTestRunResponseBody {
   message: string;
   testRunInfo: {
     id: number;
@@ -22,6 +22,11 @@ export interface ITriggerTestRunResponse {
     expoReleaseChannel: string;
     url: string;
   };
+}
+
+export interface ITriggerTestRunResponse {
+  statusCode: number;
+  body: string;
 }
 
 export interface IBuildUploadResponse {

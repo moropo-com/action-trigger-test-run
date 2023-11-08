@@ -7,7 +7,10 @@ import { createComment } from './methods/createComment';
 import StatusPoller from './methods/statusPoller';
 import { updateComment } from './methods/updateComment';
 import { uploadBuild } from './methods/uploadBuild';
-import { ITriggerTestRunResponse } from './types/types';
+import {
+  ITriggerTestRunResponse,
+  ITriggerTestRunResponseBody,
+} from './types/types';
 
 const run = async (): Promise<void> => {
   try {
@@ -103,12 +106,14 @@ const run = async (): Promise<void> => {
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
     if (!triggerTestRun.ok) {
-      throw new Error(`Failed to schedule a test: ${triggerTestBody?.message}`);
+      throw new Error(`Failed to schedule a test`);
     }
 
-    const {
-      testRunInfo: { id: testRunId },
-    } = triggerTestBody;
+    const triggerTestRunResponseBody: ITriggerTestRunResponseBody = JSON.parse(
+      triggerTestBody?.body
+    );
+
+    const testRunId = triggerTestRunResponseBody.testRunInfo?.id;
 
     console.info('Successfully triggered a test run.');
 
@@ -119,7 +124,7 @@ const run = async (): Promise<void> => {
         tests,
         expoReleaseChannel: finalReleaseChannel,
         url,
-      } = triggerTestBody?.testRunInfo;
+      } = triggerTestRunResponseBody.testRunInfo;
       const commentText = buildMessageString({
         buildId,
         devices: devices.join('<br>'),
