@@ -19,7 +19,9 @@ const run = async (): Promise<void> => {
       expoReleaseChannel = null;
     }
     let testEnvVariables: string | null = getInput('test_env_variables');
+    console.info({ testEnvVariables });
     if (!testEnvVariables?.length) {
+      console.info('No ENV Vars');
       testEnvVariables = null;
     }
     const ciCdId = getInput('scheduled_test_id');
@@ -45,9 +47,12 @@ const run = async (): Promise<void> => {
       });
 
       if (testEnvVariables) {
+        console.info('Processing Env Vars');
         try {
-          JSON.parse(testEnvVariables);
+          const json = JSON.parse(testEnvVariables);
+          console.info({ json });
         } catch (e) {
+          console.info('Error parsing: ', e);
           throw new Error(
             'Unable to parse test env variables, please check formatting.'
           );
