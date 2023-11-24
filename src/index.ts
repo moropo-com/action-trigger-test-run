@@ -18,8 +18,7 @@ const run = async (): Promise<void> => {
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    let testEnvVariables: string | null = getInput('test_env_variables');
-    console.info({ testEnvVariables });
+    let testEnvVariables: string | null = getInput('env');
     if (!testEnvVariables?.length) {
       console.info('No ENV Vars');
       testEnvVariables = null;
@@ -49,10 +48,8 @@ const run = async (): Promise<void> => {
       if (testEnvVariables) {
         console.info('Processing Env Vars');
         try {
-          const json = JSON.parse(testEnvVariables);
-          console.info({ json });
+          JSON.parse(testEnvVariables);
         } catch (e) {
-          console.info('Error parsing: ', e);
           throw new Error(
             'Unable to parse test env variables, please check formatting.'
           );
