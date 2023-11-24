@@ -34146,7 +34146,9 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             expoReleaseChannel = null;
         }
         let testEnvVariables = (0, core_1.getInput)('test_env_variables');
+        console.info({ testEnvVariables });
         if (!(testEnvVariables === null || testEnvVariables === void 0 ? void 0 : testEnvVariables.length)) {
+            console.info('No ENV Vars');
             testEnvVariables = null;
         }
         const ciCdId = (0, core_1.getInput)('scheduled_test_id');
@@ -34167,10 +34169,13 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 auth: githubToken,
             });
             if (testEnvVariables) {
+                console.info('Processing Env Vars');
                 try {
-                    JSON.parse(testEnvVariables);
+                    const json = JSON.parse(testEnvVariables);
+                    console.info({ json });
                 }
                 catch (e) {
+                    console.info('Error parsing: ', e);
                     throw new Error('Unable to parse test env variables, please check formatting.');
                 }
             }
