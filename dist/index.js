@@ -34145,8 +34145,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         if (!(expoReleaseChannel === null || expoReleaseChannel === void 0 ? void 0 : expoReleaseChannel.length)) {
             expoReleaseChannel = null;
         }
-        let testEnvVariables = (0, core_1.getInput)('test_env_variables');
-        console.info({ testEnvVariables });
+        let testEnvVariables = (0, core_1.getInput)('env');
         if (!(testEnvVariables === null || testEnvVariables === void 0 ? void 0 : testEnvVariables.length)) {
             console.info('No ENV Vars');
             testEnvVariables = null;
@@ -34171,11 +34170,9 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             if (testEnvVariables) {
                 console.info('Processing Env Vars');
                 try {
-                    const json = JSON.parse(testEnvVariables);
-                    console.info({ json });
+                    JSON.parse(testEnvVariables);
                 }
                 catch (e) {
-                    console.info('Error parsing: ', e);
                     throw new Error('Unable to parse test env variables, please check formatting.');
                 }
             }
