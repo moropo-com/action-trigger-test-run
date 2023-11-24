@@ -14,35 +14,56 @@ import {
 
 const run = async (): Promise<void> => {
   try {
-    let expoReleaseChannel: string | null = getInput('expo_release_channel');
+    // let expoReleaseChannel: string | null = getInput('expo_release_channel');
+    // if (!expoReleaseChannel?.length) {
+    //   expoReleaseChannel = null;
+    // }
+    // let testEnvVariables: string | null = getInput('test_env_variables');
+    // if (!testEnvVariables?.length) {
+    //   testEnvVariables = null;
+    // }
+    // const ciCdId = getInput('scheduled_test_id');
+    // const apiKey = getInput('api_key');
+    // const githubToken = getInput('github_token');
+    // const buildPath = getInput('build_path');
+    // const moropoUrl = new URL(getInput('moropo_url'));
+    // const moropoApiUrl = new URL(getInput('moropo_api_url'));
+    // const sync = getInput('sync');
+
+    let expoReleaseChannel: string | null = '';
     if (!expoReleaseChannel?.length) {
       expoReleaseChannel = null;
     }
-    let testEnvVariables: string | null = getInput('test_env_variables');
+    let testEnvVariables: string | null =
+      '{"EXPORELEASECHANNEL":"fake","VAR_1":"variable"}';
     if (!testEnvVariables?.length) {
       testEnvVariables = null;
     }
-    const ciCdId = getInput('scheduled_test_id');
-    const apiKey = getInput('api_key');
-    const githubToken = getInput('github_token');
+    const ciCdId = '8e2cb181-257a-40b7-8f55-56a5b5d182d7';
+    const apiKey = '5871aabf-ff92-4a5d-977f-dbae5bab5a08';
+    const githubToken = null;
     const buildPath = getInput('build_path');
-    const moropoUrl = new URL(getInput('moropo_url'));
-    const moropoApiUrl = new URL(getInput('moropo_api_url'));
-    const sync = getInput('sync');
+    const moropoUrl = new URL('https://test.moropo.com/');
+    const moropoApiUrl = new URL('https://api.test.moropo.com/');
+    const sync = 'true';
+    const test = getInput('TEST');
 
     let octokit: Octokit | null = null;
     let commentId: number | null = null;
-    const context = github.context;
+    // const context = github.context;
+
+    console.log({ test });
+    if (!test) throw new Error('FAILED');
 
     try {
-      if (!githubToken) {
-        throw new Error(
-          'No github token provided, not creating a GitHub comment.'
-        );
-      }
-      octokit = new Octokit({
-        auth: githubToken,
-      });
+      // if (!githubToken) {
+      //   throw new Error(
+      //     'No github token provided, not creating a GitHub comment.'
+      //   );
+      // }
+      // octokit = new Octokit({
+      //   auth: githubToken,
+      // });
 
       if (testEnvVariables) {
         try {
@@ -54,17 +75,17 @@ const run = async (): Promise<void> => {
         }
       }
 
-      const commentText = 'Uploading Build..';
+      // const commentText = 'Uploading Build..';
 
-      const { commentId: newCommentId, error } = await createComment({
-        commentText,
-        context,
-        octokit,
-      });
-      if (error) {
-        throw new Error(error.toString());
-      }
-      commentId = newCommentId;
+      // const { commentId: newCommentId, error } = await createComment({
+      //   commentText,
+      //   context,
+      //   octokit,
+      // });
+      // if (error) {
+      //   throw new Error(error.toString());
+      // }
+      // commentId = newCommentId;
     } catch (error) {
       console.warn(
         'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
@@ -77,10 +98,10 @@ const run = async (): Promise<void> => {
       buildId = (await uploadBuild(moropoApiUrl, apiKey, buildPath)).buildId;
     }
 
-    if (octokit && commentId) {
-      const commentText = 'Triggering test...';
-      await updateComment({ context, octokit, commentId, commentText });
-    }
+    // if (octokit && commentId) {
+    //   const commentText = 'Triggering test...';
+    //   await updateComment({ context, octokit, commentId, commentText });
+    // }
 
     // Trigger test run
     const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
@@ -91,9 +112,9 @@ const run = async (): Promise<void> => {
         buildId,
         commentId,
         githubToken,
-        isPullRequest: Boolean(context.payload.pull_request),
-        owner: context.repo.owner,
-        repo: context.repo.repo,
+        isPullRequest: true,
+        owner: 'moropo',
+        repo: 'classy-mall',
         testEnvVariables,
       }),
       headers: {
@@ -132,19 +153,19 @@ const run = async (): Promise<void> => {
         expoReleaseChannel: finalReleaseChannel,
         url,
       });
-      await updateComment({ context, octokit, commentId, commentText });
+      // await updateComment({ context, octokit, commentId, commentText });
     }
 
     const isSync = sync === 'true';
 
-    if (!isSync && octokit) {
-      await createComment({
-        commentText:
-          'Unable to update check status any further, please include a Github PAT or sync argument',
-        context,
-        octokit,
-      });
-    }
+    // if (!isSync && octokit) {
+    //   await createComment({
+    //     commentText:
+    //       'Unable to update check status any further, please include a Github PAT or sync argument',
+    //     context,
+    //     octokit,
+    //   });s
+    // }
 
     isSync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
   } catch (error) {
