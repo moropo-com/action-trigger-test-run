@@ -11356,6 +11356,10 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         }
         const isSync = sync === 'true';
         console.info(octokit);
+        const actor = github.context.actor;
+        const username = yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
+        console.info({ actor, username });
+        console.info(octokit);
         console.info({ isSync, githubToken });
         if (!isSync && octokit) {
             yield (0, createComment_1.createComment)({
