@@ -46,7 +46,7 @@ const run = async (): Promise<void> => {
       });
 
       if (testEnvVariables) {
-        console.info('Processing Env Vars');
+        console.info('Processing Env Vars in correct branch');
         try {
           JSON.parse(testEnvVariables);
         } catch (e) {
@@ -118,7 +118,7 @@ const run = async (): Promise<void> => {
 
     const testRunId = triggerTestRunResponseBody.testRunInfo?.id;
 
-    console.info('Successfully triggered a test run.');
+    console.info('Successfully triggered a test run.  in correct branch');
 
     if (octokit && commentId) {
       const {
