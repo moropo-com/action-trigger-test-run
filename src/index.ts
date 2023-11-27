@@ -138,8 +138,15 @@ const run = async (): Promise<void> => {
     }
 
     const isSync = sync === 'true';
+    let isPAT = false;
+    try {
+      await octokit?.rest.users.getAuthenticated();
+      isPAT = true;
+    } catch {
+      // Not a PAT, must be auto generated token
+    }
 
-    if (!isSync && octokit) {
+    if (!isSync && octokit && !isPAT) {
       await createComment({
         commentText:
           'Unable to update check status any further, please include a Github PAT or sync argument',
