@@ -139,11 +139,10 @@ const run = async (): Promise<void> => {
     }
 
     const isSync = sync === 'true';
-    console.info(octokit);
     const actor = github.context.actor;
+    console.info({ actor });
     const username = await octokit?.rest.users.getAuthenticated();
-    console.info({ actor, username });
-    console.info(octokit);
+    console.info({ username });
     console.info({ isSync, githubToken });
     if (!isSync && octokit) {
       await createComment({
