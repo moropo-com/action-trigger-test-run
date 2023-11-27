@@ -138,7 +138,8 @@ const run = async (): Promise<void> => {
     }
 
     const isSync = sync === 'true';
-
+    console.log(octokit);
+    console.log({ isSync, githubToken });
     if (!isSync && octokit) {
       await createComment({
         commentText:
