@@ -71,6 +71,7 @@ const run = async (): Promise<void> => {
       console.warn(
         'Failed to create comment, please ensure you have provided a valid github token and that the workflow has the correct permissions.'
       );
+      console.info(error);
     }
 
     // Upload build if provided
@@ -138,8 +139,8 @@ const run = async (): Promise<void> => {
     }
 
     const isSync = sync === 'true';
-    console.log(octokit);
-    console.log({ isSync, githubToken });
+    console.info(octokit);
+    console.info({ isSync, githubToken });
     if (!isSync && octokit) {
       await createComment({
         commentText:
