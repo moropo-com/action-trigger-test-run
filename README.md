@@ -32,14 +32,14 @@ jobs:
           env: '{"VAR_1":"Some variable", "VAR_2":"A different variable"}'
 ```
 
-In this example, this action will run whenever a push to the producction or staging branch occurs.
+In this example, this action will run whenever a push to the production or staging branch occurs.
 
 ## Inputs
 
 ### `api_key`
 
 **Required** - Moropo App Secret Key, find this in your app in the Moropo dashboard.
-It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however we recommend to use Github Secrets for this parameter and provide as follows:
+It follows the UUID schema, e.g. `85e67636-7652-45a8-94ac-e7cdd7e8f869`, however we recommend using Github Secrets for this parameter and provide as follows:
 
 ```yaml
 ...
