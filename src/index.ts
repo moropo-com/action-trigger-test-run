@@ -138,18 +138,22 @@ const run = async (): Promise<void> => {
     }
 
     const isSync = sync === 'true';
-    let isPAT = false;
-    try {
-      await octokit?.rest.users.getAuthenticated();
-      isPAT = true;
-    } catch {
-      // Not a PAT, must be auto generated token
-    }
 
-    if (!isSync && octokit && !isPAT) {
+    // Disabled until PAT checks are working.
+
+    // let isPAT = false;
+    // try {
+    //   await octokit?.rest.users.getAuthenticated();
+    //   isPAT = true;
+    // } catch {
+    //   // Not a PAT, must be auto generated token
+    // }
+
+    // Check for && !isPAT once above is re-enabled.
+    if (!isSync && octokit) {
       await createComment({
         commentText:
-          'Unable to update check status any further, please include a Github PAT or sync argument',
+          'Unable to update check status any further, please include sync argument',
         context,
         octokit,
       });
