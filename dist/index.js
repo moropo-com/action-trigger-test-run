@@ -34221,7 +34221,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         });
         const triggerTestBody = yield triggerTestRun.json();
         if (!triggerTestRun.ok) {
-            throw new Error(`Failed to schedule a test`);
+            let errorMsg = null;
+            try {
+                const triggerTestRunResponseBody = JSON.parse(triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.body);
+                errorMsg = triggerTestRunResponseBody.message;
+            }
+            catch (_b) {
+                console.info('Unable to parse error message.');
+            }
+            throw new Error(errorMsg !== null && errorMsg !== void 0 ? errorMsg : `Failed to schedule a test`);
         }
         const triggerTestRunResponseBody = JSON.parse(triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.body);
         const testRunId = (_a = triggerTestRunResponseBody.testRunInfo) === null || _a === void 0 ? void 0 : _a.id;
@@ -34243,7 +34251,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
             isPAT = true;
         }
-        catch (_b) {
+        catch (_c) {
             // Not a PAT, must be auto generated token
         }
         if (!isSync && octokit && !isPAT) {
