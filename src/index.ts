@@ -84,6 +84,35 @@ const run = async (): Promise<void> => {
       await updateComment({ context, octokit, commentId, commentText });
     }
 
+    const isSync = sync === 'true';
+    let isPAT = false;
+    try {
+      await octokit?.rest.users.getAuthenticated();
+      isPAT = true;
+    } catch {
+      // Not a PAT, must be auto generated token
+    }
+
+    const sha = context.sha;
+    const repo = context.repo.repo;
+    const owner = context.repo.owner;
+    let checkId = null;
+
+    console.info({ isSync, isPAT, sha, repo, owner });
+
+    if (!isSync && isPAT && octokit) {
+      const check = await octokit.checks.create({
+        owner,
+        repo,
+        name: 'Running Moropo Tests.',
+        head_sha: sha,
+      });
+
+      checkId = check?.data.id;
+    }
+
+    console.info({ checkId });
+
     // Trigger test run
     const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
       method: 'POST',
@@ -94,8 +123,8 @@ const run = async (): Promise<void> => {
         commentId,
         githubToken,
         isPullRequest: Boolean(context.payload.pull_request),
-        owner: context.repo.owner,
-        repo: context.repo.repo,
+        owner,
+        repo,
         testEnvVariables,
       }),
       headers: {
@@ -135,15 +164,6 @@ const run = async (): Promise<void> => {
         url,
       });
       await updateComment({ context, octokit, commentId, commentText });
-    }
-
-    const isSync = sync === 'true';
-    let isPAT = false;
-    try {
-      await octokit?.rest.users.getAuthenticated();
-      isPAT = true;
-    } catch {
-      // Not a PAT, must be auto generated token
     }
 
     if (!isSync && octokit && !isPAT) {
