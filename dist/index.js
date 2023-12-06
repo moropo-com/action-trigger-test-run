@@ -34199,30 +34199,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             const commentText = 'Triggering test...';
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
-        const isSync = sync === 'true';
-        let isPAT = false;
-        try {
-            yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
-            isPAT = true;
-        }
-        catch (_b) {
-            // Not a PAT, must be auto generated token
-        }
-        const sha = context.sha;
-        const repo = context.repo.repo;
-        const owner = context.repo.owner;
-        let checkId = null;
-        console.info({ isSync, isPAT, sha, repo, owner });
-        if (!isSync && isPAT && octokit) {
-            const check = yield octokit.checks.create({
-                owner,
-                repo,
-                name: 'Running Moropo Tests.',
-                head_sha: sha,
-            });
-            checkId = check === null || check === void 0 ? void 0 : check.data.id;
-        }
-        console.info({ checkId });
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
@@ -34233,8 +34209,8 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 commentId,
                 githubToken,
                 isPullRequest: Boolean(context.payload.pull_request),
-                owner,
-                repo,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
                 testEnvVariables,
             }),
             headers: {
@@ -34260,6 +34236,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 url,
             });
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
+        }
+        const isSync = sync === 'true';
+        let isPAT = false;
+        try {
+            yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
+            isPAT = true;
+        }
+        catch (_b) {
+            // Not a PAT, must be auto generated token
         }
         if (!isSync && octokit && !isPAT) {
             yield (0, createComment_1.createComment)({
