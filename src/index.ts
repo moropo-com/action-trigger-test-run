@@ -7,10 +7,12 @@ import { createComment } from './methods/createComment';
 import StatusPoller from './methods/statusPoller';
 import { updateComment } from './methods/updateComment';
 import { uploadBuild } from './methods/uploadBuild';
+import { GitHub } from '@actions/github/lib/utils';
 import {
   ITriggerTestRunResponse,
   ITriggerTestRunResponseBody,
 } from './types/types';
+import { createRun } from './methods/createCheck';
 
 const run = async (): Promise<void> => {
   try {
@@ -32,6 +34,7 @@ const run = async (): Promise<void> => {
     const sync = getInput('sync');
 
     let octokit: Octokit | null = null;
+    let ghOctokit: InstanceType<typeof GitHub> | null = null;
     let commentId: number | null = null;
     const context = github.context;
 
@@ -41,6 +44,8 @@ const run = async (): Promise<void> => {
           'No github token provided, not creating a GitHub comment.'
         );
       }
+
+      ghOctokit = github.getOctokit(githubToken);
       octokit = new Octokit({
         auth: githubToken,
       });
@@ -82,6 +87,34 @@ const run = async (): Promise<void> => {
     if (octokit && commentId) {
       const commentText = 'Triggering test...';
       await updateComment({ context, octokit, commentId, commentText });
+    }
+
+    const isSync = sync === 'true';
+    let isPAT = false;
+    const owner = context.repo.owner;
+    const repo = context.repo.repo;
+    const sha = context.sha;
+    try {
+      await octokit?.rest.users.getAuthenticated();
+      isPAT = true;
+    } catch {
+      // Not a PAT, must be auto generated token
+    }
+
+    console.info({ isSync, owner, repo, sha, ghOctokit: Boolean(ghOctokit) });
+
+    if (!isSync && isPAT && ghOctokit) {
+      const ownership = {
+        owner,
+        repo,
+      };
+      const checkId = await createRun(
+        ghOctokit,
+        'Running Moropo Tests.',
+        sha,
+        ownership
+      );
+      console.info({ checkId });
     }
 
     // Trigger test run
@@ -143,15 +176,6 @@ const run = async (): Promise<void> => {
         url,
       });
       await updateComment({ context, octokit, commentId, commentText });
-    }
-
-    const isSync = sync === 'true';
-    let isPAT = false;
-    try {
-      await octokit?.rest.users.getAuthenticated();
-      isPAT = true;
-    } catch {
-      // Not a PAT, must be auto generated token
     }
 
     if (!isSync && octokit && !isPAT) {
