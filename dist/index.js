@@ -34215,7 +34215,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             // Not a PAT, must be auto generated token
         }
         console.info({ isSync, owner, repo, sha, ghOctokit: Boolean(ghOctokit) });
-        if (!isSync && isPAT && ghOctokit) {
+        if (ghOctokit) {
             const ownership = {
                 owner,
                 repo,
