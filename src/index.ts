@@ -103,7 +103,7 @@ const run = async (): Promise<void> => {
 
     console.info({ isSync, owner, repo, sha, ghOctokit: Boolean(ghOctokit) });
 
-    if (!isSync && isPAT && ghOctokit) {
+    if (ghOctokit) {
       const ownership = {
         owner,
         repo,
