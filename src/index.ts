@@ -108,7 +108,15 @@ const run = async (): Promise<void> => {
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
     if (!triggerTestRun.ok) {
-      throw new Error(`Failed to schedule a test`);
+      let errorMsg = null;
+      try {
+        const triggerTestRunResponseBody: ITriggerTestRunResponseBody =
+          JSON.parse(triggerTestBody?.body);
+        errorMsg = triggerTestRunResponseBody.message;
+      } catch {
+        console.info('Unable to parse error message.');
+      }
+      throw new Error(errorMsg ?? `Failed to schedule a test`);
     }
 
     const triggerTestRunResponseBody: ITriggerTestRunResponseBody = JSON.parse(
