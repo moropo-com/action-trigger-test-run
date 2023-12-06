@@ -34138,6 +34138,7 @@ const createComment_1 = __nccwpck_require__(8855);
 const statusPoller_1 = __importDefault(__nccwpck_require__(3458));
 const updateComment_1 = __nccwpck_require__(461);
 const uploadBuild_1 = __nccwpck_require__(4608);
+const createCheck_1 = __nccwpck_require__(9616);
 const run = () => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
@@ -34158,12 +34159,14 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
         const sync = (0, core_1.getInput)('sync');
         let octokit = null;
+        let ghOctokit = null;
         let commentId = null;
         const context = github.context;
         try {
             if (!githubToken) {
                 throw new Error('No github token provided, not creating a GitHub comment.');
             }
+            ghOctokit = github.getOctokit(githubToken);
             octokit = new rest_1.Octokit({
                 auth: githubToken,
             });
@@ -34199,6 +34202,27 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             const commentText = 'Triggering test...';
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
+        const isSync = sync === 'true';
+        let isPAT = false;
+        const owner = context.repo.owner;
+        const repo = context.repo.repo;
+        const sha = context.sha;
+        try {
+            yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
+            isPAT = true;
+        }
+        catch (_b) {
+            // Not a PAT, must be auto generated token
+        }
+        console.info({ isSync, owner, repo, sha, ghOctokit: Boolean(ghOctokit) });
+        if (!isSync && isPAT && ghOctokit) {
+            const ownership = {
+                owner,
+                repo,
+            };
+            const checkId = yield (0, createCheck_1.createRun)(ghOctokit, 'Running Moropo Tests.', sha, ownership);
+            console.info({ checkId });
+        }
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
@@ -34226,7 +34250,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 const triggerTestRunResponseBody = JSON.parse(triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.body);
                 errorMsg = triggerTestRunResponseBody.message;
             }
-            catch (_b) {
+            catch (_c) {
                 console.info('Unable to parse error message.');
             }
             throw new Error(errorMsg !== null && errorMsg !== void 0 ? errorMsg : `Failed to schedule a test`);
@@ -34244,15 +34268,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 url,
             });
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
-        }
-        const isSync = sync === 'true';
-        let isPAT = false;
-        try {
-            yield (octokit === null || octokit === void 0 ? void 0 : octokit.rest.users.getAuthenticated());
-            isPAT = true;
-        }
-        catch (_c) {
-            // Not a PAT, must be auto generated token
         }
         if (!isSync && octokit && !isPAT) {
             yield (0, createComment_1.createComment)({
@@ -34300,6 +34315,34 @@ const buildMessageString = ({ buildId, devices, tests, expoReleaseChannel, url, 
 [View Results](${url})
 `;
 exports.buildMessageString = buildMessageString;
+
+
+/***/ }),
+
+/***/ 9616:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createRun = void 0;
+const formatDate = () => {
+    return new Date().toISOString();
+};
+const createRun = (octokit, name, sha, ownership) => __awaiter(void 0, void 0, void 0, function* () {
+    const { data } = yield octokit.rest.checks.create(Object.assign(Object.assign({}, ownership), { head_sha: sha, name: name, started_at: formatDate() }));
+    return data.id;
+});
+exports.createRun = createRun;
 
 
 /***/ }),
