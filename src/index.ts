@@ -35,6 +35,14 @@ const run = async (): Promise<void> => {
     let commentId: number | null = null;
     const context = github.context;
 
+    const workflow = github.context.workflow;
+    const eventName = github.context.eventName;
+    const job = context.job;
+    const runId = context.runId;
+    const runNumber = context.runNumber;
+
+    console.info({ workflow, eventName, job, runId, runNumber });
+
     try {
       if (!githubToken) {
         throw new Error(
