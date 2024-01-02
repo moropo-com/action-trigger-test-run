@@ -34,6 +34,7 @@ const run = async (): Promise<void> => {
     let octokit: Octokit | null = null;
     let commentId: number | null = null;
     const context = github.context;
+    const workflowId = context.runId;
 
     try {
       if (!githubToken) {
@@ -96,6 +97,7 @@ const run = async (): Promise<void> => {
         isPullRequest: Boolean(context.payload.pull_request),
         owner: context.repo.owner,
         repo: context.repo.repo,
+        workflowId,
         testEnvVariables,
       }),
       headers: {

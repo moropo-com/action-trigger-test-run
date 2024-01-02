@@ -34160,6 +34160,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         let octokit = null;
         let commentId = null;
         const context = github.context;
+        const workflow = github.context.workflow;
+        const eventName = github.context.eventName;
+        const job = context.job;
+        const runId = context.runId;
+        const runNumber = context.runNumber;
+        console.info({ workflow, eventName, job, runId, runNumber });
         try {
             if (!githubToken) {
                 throw new Error('No github token provided, not creating a GitHub comment.');
