@@ -34150,6 +34150,11 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             console.info('No ENV Vars');
             testEnvVariables = null;
         }
+        let tags = (0, core_1.getInput)('tags');
+        if (!(tags === null || tags === void 0 ? void 0 : tags.length)) {
+            console.info('No tags');
+            tags = null;
+        }
         const ciCdId = (0, core_1.getInput)('scheduled_test_id');
         const apiKey = (0, core_1.getInput)('api_key');
         const githubToken = (0, core_1.getInput)('github_token');
@@ -34175,6 +34180,15 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 }
                 catch (e) {
                     throw new Error('Unable to parse test env variables, please check formatting.');
+                }
+            }
+            if (tags) {
+                console.info('processing tags');
+                try {
+                    JSON.parse(tags);
+                }
+                catch (e) {
+                    throw new Error('Unable to parse tags, please check formatting.');
                 }
             }
             const commentText = 'Uploading Build..';
@@ -34214,6 +34228,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 repo: context.repo.repo,
                 workflowId,
                 testEnvVariables,
+                tags,
             }),
             headers: {
                 'Content-Type': 'application/json',

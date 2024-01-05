@@ -23,6 +23,11 @@ const run = async (): Promise<void> => {
       console.info('No ENV Vars');
       testEnvVariables = null;
     }
+    let tags: string | null = getInput('tags');
+    if (!tags?.length) {
+      console.info('No tags');
+      tags = null;
+    }
     const ciCdId = getInput('scheduled_test_id');
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
@@ -54,6 +59,15 @@ const run = async (): Promise<void> => {
           throw new Error(
             'Unable to parse test env variables, please check formatting.'
           );
+        }
+      }
+
+      if (tags) {
+        console.info('processing tags');
+        try {
+          JSON.parse(tags);
+        } catch (e) {
+          throw new Error('Unable to parse tags, please check formatting.');
         }
       }
 
@@ -99,6 +113,7 @@ const run = async (): Promise<void> => {
         repo: context.repo.repo,
         workflowId,
         testEnvVariables,
+        tags,
       }),
       headers: {
         'Content-Type': 'application/json',
