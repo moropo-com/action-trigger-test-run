@@ -30,7 +30,7 @@ inputs:
   env:
     description: 'Env variables to be passed into the tests, must be in stringified JSON format (e.g. "{ "key": "value" }").'
     required: false
-   tags:
+  tags:
     description: 'Pass in tags to override tests selected in schedule settings, must be in stringified JSON format (e.g. "["tag-one","tag-two"]").'
     required: false
 
