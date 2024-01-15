@@ -124,6 +124,9 @@ const run = async (): Promise<void> => {
 
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
+    console.log(triggerTestBody);
+    console.log('OK', triggerTestRun.ok);
+    console.log('res', triggerTestRun);
     if (!triggerTestRun.ok) {
       let errorMsg = null;
       try {
