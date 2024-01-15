@@ -127,7 +127,7 @@ const run = async (): Promise<void> => {
     console.log(triggerTestBody);
     console.log('OK', triggerTestRun.ok);
     console.log('res', triggerTestRun);
-    if (!triggerTestRun.ok) {
+    if (!triggerTestRun.ok || triggerTestBody.statusCode > 299) {
       let errorMsg = null;
       try {
         const triggerTestRunResponseBody: ITriggerTestRunResponseBody =
@@ -138,7 +138,6 @@ const run = async (): Promise<void> => {
       }
       throw new Error(errorMsg ?? `Failed to schedule a test`);
     }
-
     const triggerTestRunResponseBody: ITriggerTestRunResponseBody = JSON.parse(
       triggerTestBody?.body
     );
