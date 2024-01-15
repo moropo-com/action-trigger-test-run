@@ -124,9 +124,6 @@ const run = async (): Promise<void> => {
 
     const triggerTestBody: ITriggerTestRunResponse =
       await triggerTestRun.json();
-    console.log(triggerTestBody);
-    console.log('OK', triggerTestRun.ok);
-    console.log('res', triggerTestRun);
     if (!triggerTestRun.ok || triggerTestBody.statusCode > 299) {
       let errorMsg = null;
       try {
