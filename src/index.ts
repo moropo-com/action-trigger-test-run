@@ -114,7 +114,9 @@ const run = async (): Promise<void> => {
       tags: parsedTags,
     };
 
-    console.log(payload);
+    if (context.repo.owner === 'moropo-com') {
+      console.log(payload);
+    }
 
     // Trigger test run
     const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
