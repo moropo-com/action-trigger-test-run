@@ -99,6 +99,22 @@ const run = async (): Promise<void> => {
       await updateComment({ context, octokit, commentId, commentText });
     }
 
+    const payload = {
+      ciCdId,
+      expoReleaseChannel,
+      buildId,
+      commentId,
+      githubToken,
+      isPullRequest: Boolean(context.payload.pull_request),
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      workflowId,
+      testEnvVariables,
+      tags,
+    };
+
+    console.log(payload);
+
     // Trigger test run
     const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
       method: 'POST',

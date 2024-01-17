@@ -34214,6 +34214,20 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             const commentText = 'Triggering test...';
             yield (0, updateComment_1.updateComment)({ context, octokit, commentId, commentText });
         }
+        const payload = {
+            ciCdId,
+            expoReleaseChannel,
+            buildId,
+            commentId,
+            githubToken,
+            isPullRequest: Boolean(context.payload.pull_request),
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            workflowId,
+            testEnvVariables,
+            tags,
+        };
+        console.log(payload);
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
