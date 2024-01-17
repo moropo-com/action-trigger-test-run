@@ -34228,7 +34228,9 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             testEnvVariables,
             tags: parsedTags,
         };
-        console.log(payload);
+        if (context.repo.owner === 'moropo-com') {
+            console.log(payload);
+        }
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
