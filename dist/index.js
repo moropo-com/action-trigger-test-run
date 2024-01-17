@@ -34155,6 +34155,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             console.info('No tags');
             tags = null;
         }
+        let parsedTags = [];
         const ciCdId = (0, core_1.getInput)('scheduled_test_id');
         const apiKey = (0, core_1.getInput)('api_key');
         const githubToken = (0, core_1.getInput)('github_token');
@@ -34185,7 +34186,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             if (tags) {
                 console.info('processing tags');
                 try {
-                    JSON.parse(tags);
+                    parsedTags = JSON.parse(tags);
                 }
                 catch (e) {
                     throw new Error('Unable to parse tags, please check formatting.');
@@ -34225,25 +34226,13 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             repo: context.repo.repo,
             workflowId,
             testEnvVariables,
-            tags,
+            tags: parsedTags,
         };
         console.log(payload);
         // Trigger test run
         const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
             method: 'POST',
-            body: JSON.stringify({
-                ciCdId,
-                expoReleaseChannel,
-                buildId,
-                commentId,
-                githubToken,
-                isPullRequest: Boolean(context.payload.pull_request),
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                workflowId,
-                testEnvVariables,
-                tags,
-            }),
+            body: JSON.stringify(payload),
             headers: {
                 'Content-Type': 'application/json',
                 'X-App-Api-Key': apiKey,
