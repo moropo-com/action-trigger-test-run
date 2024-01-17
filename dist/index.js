@@ -34242,7 +34242,10 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             },
         });
         const triggerTestBody = yield triggerTestRun.json();
-        if (!triggerTestRun.ok) {
+        console.log(triggerTestBody);
+        console.log('OK', triggerTestRun.ok);
+        console.log('res', triggerTestRun);
+        if (!triggerTestRun.ok || triggerTestBody.statusCode > 299) {
             let errorMsg = null;
             try {
                 const triggerTestRunResponseBody = JSON.parse(triggerTestBody === null || triggerTestBody === void 0 ? void 0 : triggerTestBody.body);
