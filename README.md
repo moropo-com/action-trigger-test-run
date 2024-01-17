@@ -30,7 +30,6 @@ jobs:
           expo_release_channel: https://u.expo.dev/[ACCCOUNT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]platform=[PLATFORM]
           build_path: path/to/build.apk
           env: '{"VAR_1":"Some variable", "VAR_2":"A different variable"}'
-          tags: '["tag-one","tag-two"]'
 ```
 
 In this example, this action will run whenever a push to the production or staging branch occurs.
@@ -121,20 +120,6 @@ It follows the regular Expo release channel schema, e.g. `https://u.expo.dev/[AC
     api_key: ${{ secrets.MOROPO_API_KEY }}
     scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
     env: '{"VAR_1":"VAL_1","VAR_2":"VAL_2"}'
-```
-
-### `tags`
-
-**Optional** - Pass tags to the Moropo test run to run tagged tests, this will override tests selected in the schedule settings. The variables must be passed as stringified JSON in the form `["tag-one","tag-two"]`
-
-```yaml
----
-- name: Moropo - Trigger Mobile App Test Run
-  uses: moropo-com/action-trigger-test-run@v2
-  with:
-    api_key: ${{ secrets.MOROPO_API_KEY }}
-    scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-    tags: '["tag-one","tag-two"]'
 ```
 
 <details>
