@@ -119,7 +119,7 @@ const run = async (): Promise<void> => {
     }
 
     // Trigger test run
-    const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
+    const triggerTestRun = await fetch(`${moropoApiUrl}testRuns`, {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {

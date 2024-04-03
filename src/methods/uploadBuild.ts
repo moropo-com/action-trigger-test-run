@@ -22,7 +22,7 @@ export const uploadBuild = async (
     filepath: buildPath,
   });
 
-  const buildUpload = await fetch(`${url}apps/builds`, {
+  const buildUpload = await fetch(`${url}builds`, {
     method: 'POST',
     body: formData,
     headers: {
