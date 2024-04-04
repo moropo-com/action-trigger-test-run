@@ -22,15 +22,12 @@ export default class StatusPoller {
   async poll({ sleep, prevErrorCount = 0 }: IPollArgs) {
     try {
       const pollTestRun = await fetch(
-        `${this.moropoUrl}.netlify/functions/pollTestRunStatus`,
+        `${this.moropoUrl}testRuns/${this.testRunId}`,
         {
-          method: 'POST',
-          body: JSON.stringify({
-            testRunId: this.testRunId,
-          }),
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            'x-moropo-api-key': this.apiKey,
+            'x-app-api-key': this.apiKey,
             'User-Agent': 'moropo-github-action',
           },
         }
