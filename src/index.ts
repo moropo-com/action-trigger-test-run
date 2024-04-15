@@ -123,7 +123,7 @@ const run = async (): Promise<void> => {
       body: JSON.stringify(payload),
       headers: {
         'Content-Type': 'application/json',
-        'X-App-Api-Key': apiKey,
+        'x-app-api-key': apiKey,
         'User-Agent': 'moropo-github-action',
       },
     });

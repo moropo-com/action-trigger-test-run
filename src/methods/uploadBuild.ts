@@ -26,7 +26,7 @@ export const uploadBuild = async (
     method: 'POST',
     body: formData,
     headers: {
-      'X-App-Api-Key': apiKey,
+      'x-app-api-key': apiKey,
       'User-Agent': 'moropo-github-action',
     },
   });
