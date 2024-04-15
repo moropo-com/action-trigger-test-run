@@ -18,9 +18,6 @@ inputs:
   build_path:
     description: 'Path to the build artifact to upload to Moropo before running the test'
     required: false
-  moropo_url:
-    description: 'For development purposes only - choose a different moropo frontend URL'
-    default: 'https://app.moropo.com'
   moropo_api_url:
     description: 'For development purposes only - choose a different moropo API URL'
     default: 'https://api.moropo.com'

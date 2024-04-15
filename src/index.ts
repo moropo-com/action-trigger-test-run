@@ -33,7 +33,6 @@ const run = async (): Promise<void> => {
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
     const buildPath = getInput('build_path');
-    const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
     const sync = getInput('sync');
 
@@ -119,12 +118,12 @@ const run = async (): Promise<void> => {
     }
 
     // Trigger test run
-    const triggerTestRun = await fetch(`${moropoApiUrl}apps/tests`, {
+    const triggerTestRun = await fetch(`${moropoApiUrl}testRuns`, {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {
         'Content-Type': 'application/json',
-        'X-App-Api-Key': apiKey,
+        'x-app-api-key': apiKey,
         'User-Agent': 'moropo-github-action',
       },
     });
@@ -186,7 +185,7 @@ const run = async (): Promise<void> => {
       });
     }
 
-    isSync && new StatusPoller(moropoUrl, testRunId, apiKey).startPolling();
+    isSync && new StatusPoller(moropoApiUrl, testRunId, apiKey).startPolling();
   } catch (error) {
     if (typeof error === 'string') {
       setFailed(error);
