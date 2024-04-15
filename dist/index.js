@@ -34160,7 +34160,6 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
         const apiKey = (0, core_1.getInput)('api_key');
         const githubToken = (0, core_1.getInput)('github_token');
         const buildPath = (0, core_1.getInput)('build_path');
-        const moropoUrl = new URL((0, core_1.getInput)('moropo_url'));
         const moropoApiUrl = new URL((0, core_1.getInput)('moropo_api_url'));
         const sync = (0, core_1.getInput)('sync');
         let octokit = null;
@@ -34232,12 +34231,12 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
             console.log(payload);
         }
         // Trigger test run
-        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}apps/tests`, {
+        const triggerTestRun = yield (0, node_fetch_1.default)(`${moropoApiUrl}testRuns`, {
             method: 'POST',
             body: JSON.stringify(payload),
             headers: {
                 'Content-Type': 'application/json',
-                'X-App-Api-Key': apiKey,
+                'x-app-api-key': apiKey,
                 'User-Agent': 'moropo-github-action',
             },
         });
@@ -34283,7 +34282,7 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 octokit,
             });
         }
-        isSync && new statusPoller_1.default(moropoUrl, testRunId, apiKey).startPolling();
+        isSync && new statusPoller_1.default(moropoApiUrl, testRunId, apiKey).startPolling();
     }
     catch (error) {
         if (typeof error === 'string') {
@@ -34433,14 +34432,11 @@ class StatusPoller {
     poll({ sleep, prevErrorCount = 0 }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const pollTestRun = yield (0, node_fetch_1.default)(`${this.moropoUrl}.netlify/functions/pollTestRunStatus`, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        testRunId: this.testRunId,
-                    }),
+                const pollTestRun = yield (0, node_fetch_1.default)(`${this.moropoUrl}testRuns/${this.testRunId}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-moropo-api-key': this.apiKey,
+                        'x-app-api-key': this.apiKey,
                         'User-Agent': 'moropo-github-action',
                     },
                 });
@@ -34566,11 +34562,11 @@ const uploadBuild = (url, apiKey, buildPath) => __awaiter(void 0, void 0, void 0
         filename: fileName,
         filepath: buildPath,
     });
-    const buildUpload = yield (0, node_fetch_1.default)(`${url}apps/builds`, {
+    const buildUpload = yield (0, node_fetch_1.default)(`${url}builds`, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-App-Api-Key': apiKey,
+            'x-app-api-key': apiKey,
             'User-Agent': 'moropo-github-action',
         },
     });
