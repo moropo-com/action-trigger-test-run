@@ -33,7 +33,6 @@ const run = async (): Promise<void> => {
     const apiKey = getInput('api_key');
     const githubToken = getInput('github_token');
     const buildPath = getInput('build_path');
-    const moropoUrl = new URL(getInput('moropo_url'));
     const moropoApiUrl = new URL(getInput('moropo_api_url'));
     const sync = getInput('sync');
 
