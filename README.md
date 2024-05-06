@@ -27,7 +27,7 @@ jobs:
           api_key: ${{ secrets.MOROPO_API_KEY }}
           scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
           github_token: ${{ secrets.GITHUB_PAT }}
-          expo_release_channel: https://u.expo.dev/[ACCCOUNT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]platform=[PLATFORM]
+          expo_release_channel: https://u.expo.dev/[PROJECT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]&platform=[PLATFORM]
           build_path: path/to/build.apk
           env: '{"VAR_1":"Some variable", "VAR_2":"A different variable"}'
 ```
@@ -83,7 +83,7 @@ As a minimum, you will require your PAT to have `public_repo` permissions to cor
 ### `expo_release_channel`
 
 **Optional** - requires Moropo-Expo integration setup. Tell Moropo to pull a new Expo update for this test run.
-It follows the regular Expo release channel schema, e.g. `https://u.expo.dev/[ACCCOUNT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]platform=[PLATFORM]`
+It follows the regular Expo release channel schema, e.g. `https://u.expo.dev/[PROJECT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]&platform=[PLATFORM]`
 
 ```yaml
 - name: Moropo - Trigger Mobile App Test Run
@@ -91,7 +91,7 @@ It follows the regular Expo release channel schema, e.g. `https://u.expo.dev/[AC
   with:
     api_key: ${{ secrets.MOROPO_API_KEY }}
     scheduled_test_id: 3a8c2d7b-9e0f-4b2c-a7d4-6b8f7a9c5e10
-    expo_release_channel: https://u.expo.dev/[ACCCOUNT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]platform=[PLATFORM]
+    expo_release_channel: https://u.expo.dev/[PROJECT_ID]?channel-name=[RELEASE_CHANNEL_ID]&runtime-version=[RUNTIME]&platform=[PLATFORM]
 ```
 
 ### `build_path`
