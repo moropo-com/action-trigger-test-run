@@ -32,8 +32,11 @@ export default class StatusPoller {
           },
         }
       );
-      const pollTestRunBody: IPollTestRunStatusResponse =
+      const pollTestRunJson: { statusCode: number; body: string } =
         await pollTestRun.json();
+      const pollTestRunBody: IPollTestRunStatusResponse = JSON.parse(
+        pollTestRunJson?.body
+      );
 
       const { complete, passed, message } = pollTestRunBody;
       console.info(`Polling result for test run status: ${message}`);
