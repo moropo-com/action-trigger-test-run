@@ -34282,7 +34282,10 @@ const run = () => __awaiter(void 0, void 0, void 0, function* () {
                 octokit,
             });
         }
-        isSync && new statusPoller_1.default(moropoApiUrl, testRunId, apiKey).startPolling();
+        if (isSync) {
+            console.info('Polling for test run status');
+            new statusPoller_1.default(moropoApiUrl, testRunId, apiKey).startPolling();
+        }
     }
     catch (error) {
         if (typeof error === 'string') {
@@ -34442,6 +34445,7 @@ class StatusPoller {
                 });
                 const pollTestRunBody = yield pollTestRun.json();
                 const { complete, passed, message } = pollTestRunBody;
+                console.info(`Polling result for test run status: ${message}`);
                 if (complete) {
                     console.info(`Test run completed with a result of: ${passed ? 'pass' : 'fail'}`);
                     this.teardown();
@@ -34471,6 +34475,7 @@ class StatusPoller {
     }
     registerTimeout() {
         this.timeout = setTimeout(() => { }, WAIT_TIMEOUT_MS);
+        console.info('Timeout registered for 30 minutes');
     }
     teardown() {
         this.timeout && clearTimeout(this.timeout);
