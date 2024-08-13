@@ -38,10 +38,15 @@ export default class StatusPoller {
       const { complete, passed, message } = pollTestRunBody;
 
       if (complete) {
+        console.info(
+          `Test run completed with a result of: ${passed ? 'pass' : 'fail'}`
+        );
         this.teardown();
         if (!passed) {
           this.markFailed(message);
+          return process.exit(1);
         }
+        return process.exit(0);
       } else {
         setTimeout(() => this.poll({ sleep }), sleep);
       }
