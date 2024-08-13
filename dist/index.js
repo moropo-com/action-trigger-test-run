@@ -34443,7 +34443,8 @@ class StatusPoller {
                         'User-Agent': 'moropo-github-action',
                     },
                 });
-                const pollTestRunBody = yield pollTestRun.json();
+                const pollTestRunJson = yield pollTestRun.json();
+                const pollTestRunBody = JSON.parse(pollTestRunJson === null || pollTestRunJson === void 0 ? void 0 : pollTestRunJson.body);
                 const { complete, passed, message } = pollTestRunBody;
                 console.info(`Polling result for test run status: ${message}`);
                 if (complete) {
