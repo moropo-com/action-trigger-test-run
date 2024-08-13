@@ -185,7 +185,10 @@ const run = async (): Promise<void> => {
       });
     }
 
-    isSync && new StatusPoller(moropoApiUrl, testRunId, apiKey).startPolling();
+    if (isSync) {
+      console.info('Polling for test run status');
+      new StatusPoller(moropoApiUrl, testRunId, apiKey).startPolling();
+    }
   } catch (error) {
     if (typeof error === 'string') {
       setFailed(error);

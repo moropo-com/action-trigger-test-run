@@ -36,6 +36,7 @@ export default class StatusPoller {
         await pollTestRun.json();
 
       const { complete, passed, message } = pollTestRunBody;
+      console.info(`Polling result for test run status: ${message}`);
 
       if (complete) {
         console.info(
@@ -69,6 +70,7 @@ export default class StatusPoller {
 
   registerTimeout() {
     this.timeout = setTimeout(() => {}, WAIT_TIMEOUT_MS);
+    console.info('Timeout registered for 30 minutes');
   }
 
   teardown() {
